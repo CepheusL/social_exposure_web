@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Exposure Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <span class="brand">Social Exposure Explorer</span>
+    <nav>
+      <a href="index.html" class="active">Overview</a>
+      <a href="explore.html">Explore</a>
+      <a href="compare.html">Compare</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="methods.html">Methods</a>
+    </nav>
+    <button class="hamburger" aria-label="Menu">&#9776;</button>
+  </header>
+
+  <div class="page-wrapper no-sidebar">
+    <div class="main-content">
+      <h1>Social Exposure Explorer</h1>
+      <p class="subtitle">Explore firm-level social exposure measures across countries, industries, and time.</p>
+
+      <div class="stat-grid" id="stats"></div>
+
+      <h2>Quick Explore</h2>
+      <div class="card-grid" id="quick-links"></div>
+
+      <h2>Global Trend</h2>
+      <div class="chart-container" style="height:350px">
+        <canvas id="overview-chart"></canvas>
+      </div>
+
+      <div style="margin-top:40px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
+        <h2 style="margin-top:0">Citation</h2>
+        <p style="font-size:0.9rem;color:var(--text-secondary)">If you use data from this website, please cite:</p>
+        <p style="font-size:0.9rem;margin-left:16px">Liu, Sautner, van Lent, Vilkov, and Zhang. "Unpacking Social Exposure."</p>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-top:8px">Data repository: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">https://osf.io/kawbj</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="lib/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/overview.js"></script>
+</body>
+</html>

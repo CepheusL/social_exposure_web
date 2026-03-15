@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking — Social Exposure Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <span class="brand">Social Exposure Explorer</span>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="explore.html">Explore</a>
+      <a href="compare.html">Compare</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="methods.html">Methods</a>
+    </nav>
+    <button class="hamburger" aria-label="Menu">&#9776;</button>
+  </header>
+
+  <div class="page-wrapper no-sidebar">
+    <div class="main-content" style="max-width:1100px">
+      <h1>Rankings</h1>
+      <p class="subtitle">Top and bottom entities by social exposure measures</p>
+
+      <div class="view-controls" style="flex-wrap:wrap;gap:12px">
+        <div>
+          <label>Entity:</label>
+          <select id="ctrl-entity">
+            <option value="country">Countries</option>
+            <option value="industry">Industries</option>
+            <option value="firm">Firms</option>
+          </select>
+        </div>
+        <div>
+          <label>Measure:</label>
+          <select id="ctrl-measure"></select>
+        </div>
+        <div>
+          <label>Mode:</label>
+          <select id="ctrl-mode">
+            <option value="single">Single Year</option>
+            <option value="period">Period Average</option>
+          </select>
+        </div>
+        <div id="year-controls">
+          <label>Year:</label>
+          <select id="ctrl-year"></select>
+        </div>
+        <div id="period-controls" style="display:none">
+          <label>Period:</label>
+          <input type="number" id="ctrl-period-start" style="width:70px"> –
+          <input type="number" id="ctrl-period-end" style="width:70px">
+        </div>
+        <div>
+          <label>Show:</label>
+          <select id="ctrl-direction">
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+          </select>
+          <input type="number" id="ctrl-topn" value="20" min="5" max="500" style="width:60px">
+        </div>
+        <div>
+          <label>Min Obs:</label>
+          <input type="number" id="ctrl-mincov" value="10" min="0" style="width:60px">
+        </div>
+      </div>
+
+      <p class="filter-hint">Rank countries, industries, or firms by any social exposure measure. Choose a single year or period average, set how many to show, and use "Min Obs" to exclude entities with few observations. Search to locate a specific entity — if it falls outside the displayed range, the table extends to reveal its position.</p>
+
+      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="search-entity" placeholder="Search for an entity..." style="flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem">
+        <button class="btn btn-primary btn-sm" id="btn-export">Export CSV</button>
+      </div>
+
+      <div class="table-container" id="ranking-table-wrap">
+        <table id="ranking-table">
+          <thead><tr><th>#</th><th>Name</th><th>Value</th><th>Obs</th><th>Firms</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="lib/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/ranking.js"></script>
+</body>
+</html>

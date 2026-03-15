@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare — Social Exposure Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <span class="brand">Social Exposure Explorer</span>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="explore.html">Explore</a>
+      <a href="compare.html">Compare</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="methods.html">Methods</a>
+    </nav>
+    <button class="hamburger" aria-label="Menu">&#9776;</button>
+  </header>
+
+  <div class="page-wrapper">
+    <aside class="sidebar" id="sidebar">
+      <div class="filter-group">
+        <label>Entity Type</label>
+        <select id="entity-type">
+          <option value="country">Countries</option>
+          <option value="industry">Industries</option>
+          <option value="firm">Firms</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Measure</label>
+        <select id="compare-measure"></select>
+      </div>
+      <div class="filter-group">
+        <label>Year Range</label>
+        <div class="year-range">
+          <input type="number" id="filter-ymin">
+          <span>to</span>
+          <input type="number" id="filter-ymax">
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Select Entities</label>
+        <div class="chip-input-wrap" id="entity-wrap">
+          <input type="text" id="entity-input" placeholder="Search...">
+          <div class="dropdown-list" id="entity-dropdown"></div>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-sm" id="filter-clear">Clear All</button>
+        <button class="btn btn-sm" id="filter-copy-link">Copy Link</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <h1>Cross-sectional Comparison</h1>
+      <p class="subtitle">Compare multiple entities on a single measure</p>
+
+      <p class="filter-hint">Choose an entity type (countries, industries, or firms), pick a measure, then add two or more entities to compare their trends side by side. Use the year range to focus on a specific period.</p>
+
+      <div class="chart-container" style="height:420px" id="chart-wrap">
+        <canvas id="compare-chart"></canvas>
+      </div>
+
+      <div class="table-container" id="summary-table-wrap" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <script src="lib/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/compare.js"></script>
+</body>
+</html>

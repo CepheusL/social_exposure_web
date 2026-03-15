@@ -1,0 +1,922 @@
+{
+  "by_year": [
+    {
+      "year": 2003,
+      "n_obs": 3183,
+      "n_firms": 3183
+    },
+    {
+      "year": 2004,
+      "n_obs": 3406,
+      "n_firms": 3406
+    },
+    {
+      "year": 2005,
+      "n_obs": 3700,
+      "n_firms": 3700
+    },
+    {
+      "year": 2006,
+      "n_obs": 3915,
+      "n_firms": 3915
+    },
+    {
+      "year": 2007,
+      "n_obs": 4316,
+      "n_firms": 4316
+    },
+    {
+      "year": 2008,
+      "n_obs": 4672,
+      "n_firms": 4672
+    },
+    {
+      "year": 2009,
+      "n_obs": 4641,
+      "n_firms": 4641
+    },
+    {
+      "year": 2010,
+      "n_obs": 4656,
+      "n_firms": 4656
+    },
+    {
+      "year": 2011,
+      "n_obs": 4350,
+      "n_firms": 4350
+    },
+    {
+      "year": 2012,
+      "n_obs": 4784,
+      "n_firms": 4784
+    },
+    {
+      "year": 2013,
+      "n_obs": 4225,
+      "n_firms": 4225
+    },
+    {
+      "year": 2014,
+      "n_obs": 4868,
+      "n_firms": 4868
+    },
+    {
+      "year": 2015,
+      "n_obs": 4872,
+      "n_firms": 4872
+    },
+    {
+      "year": 2016,
+      "n_obs": 4192,
+      "n_firms": 4192
+    },
+    {
+      "year": 2017,
+      "n_obs": 4617,
+      "n_firms": 4617
+    },
+    {
+      "year": 2018,
+      "n_obs": 5245,
+      "n_firms": 5245
+    },
+    {
+      "year": 2019,
+      "n_obs": 5337,
+      "n_firms": 5337
+    },
+    {
+      "year": 2020,
+      "n_obs": 5931,
+      "n_firms": 5931
+    },
+    {
+      "year": 2021,
+      "n_obs": 6147,
+      "n_firms": 6147
+    },
+    {
+      "year": 2022,
+      "n_obs": 5316,
+      "n_firms": 5316
+    },
+    {
+      "year": 2023,
+      "n_obs": 5368,
+      "n_firms": 5368
+    },
+    {
+      "year": 2024,
+      "n_obs": 5550,
+      "n_firms": 5550
+    }
+  ],
+  "by_country": [
+    {
+      "code": "US",
+      "name": "United States of America",
+      "n_obs": 67504,
+      "n_firms": 7198
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "n_obs": 7718,
+      "n_firms": 1004
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "n_obs": 3399,
+      "n_firms": 555
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "n_obs": 1801,
+      "n_firms": 324
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "n_obs": 1783,
+      "n_firms": 568
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "n_obs": 1633,
+      "n_firms": 400
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "n_obs": 1552,
+      "n_firms": 234
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "n_obs": 1399,
+      "n_firms": 162
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "n_obs": 1380,
+      "n_firms": 221
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "n_obs": 1257,
+      "n_firms": 189
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "n_obs": 1099,
+      "n_firms": 258
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "n_obs": 992,
+      "n_firms": 136
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "n_obs": 896,
+      "n_firms": 110
+    },
+    {
+      "code": "BM",
+      "name": "Bermuda",
+      "n_obs": 818,
+      "n_firms": 76
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "n_obs": 798,
+      "n_firms": 91
+    },
+    {
+      "code": "IE",
+      "name": "Ireland; Republic of",
+      "n_obs": 719,
+      "n_firms": 72
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "n_obs": 558,
+      "n_firms": 70
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "n_obs": 549,
+      "n_firms": 87
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "n_obs": 541,
+      "n_firms": 91
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "n_obs": 463,
+      "n_firms": 64
+    },
+    {
+      "code": "FI",
+      "name": "Finland",
+      "n_obs": 451,
+      "n_firms": 80
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong",
+      "n_obs": 417,
+      "n_firms": 75
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "n_obs": 409,
+      "n_firms": 98
+    },
+    {
+      "code": "DK",
+      "name": "Denmark",
+      "n_obs": 383,
+      "n_firms": 57
+    },
+    {
+      "code": "TW",
+      "name": "Taiwan",
+      "n_obs": 363,
+      "n_firms": 50
+    },
+    {
+      "code": "KR",
+      "name": "Korea; Republic (S. Korea)",
+      "n_obs": 318,
+      "n_firms": 43
+    },
+    {
+      "code": "LU",
+      "name": "Luxembourg",
+      "n_obs": 314,
+      "n_firms": 53
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "n_obs": 292,
+      "n_firms": 42
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "n_obs": 284,
+      "n_firms": 46
+    },
+    {
+      "code": "GR",
+      "name": "Greece",
+      "n_obs": 278,
+      "n_firms": 40
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "n_obs": 275,
+      "n_firms": 46
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "n_obs": 252,
+      "n_firms": 53
+    },
+    {
+      "code": "CL",
+      "name": "Chile",
+      "n_obs": 214,
+      "n_firms": 23
+    },
+    {
+      "code": "AR",
+      "name": "Argentina",
+      "n_obs": 207,
+      "n_firms": 21
+    },
+    {
+      "code": "AT",
+      "name": "Austria",
+      "n_obs": 183,
+      "n_firms": 30
+    },
+    {
+      "code": "KY",
+      "name": "Cayman Islands",
+      "n_obs": 152,
+      "n_firms": 22
+    },
+    {
+      "code": "TR",
+      "name": "Turkey",
+      "n_obs": 132,
+      "n_firms": 23
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "n_obs": 108,
+      "n_firms": 19
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "n_obs": 108,
+      "n_firms": 12
+    },
+    {
+      "code": "MC",
+      "name": "Monaco",
+      "n_obs": 107,
+      "n_firms": 10
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "n_obs": 104,
+      "n_firms": 12
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "n_obs": 98,
+      "n_firms": 21
+    },
+    {
+      "code": "PR",
+      "name": "Puerto Rico",
+      "n_obs": 85,
+      "n_firms": 8
+    },
+    {
+      "code": "MY",
+      "name": "Malaysia",
+      "n_obs": 78,
+      "n_firms": 15
+    },
+    {
+      "code": "PH",
+      "name": "Philippines",
+      "n_obs": 69,
+      "n_firms": 18
+    },
+    {
+      "code": "PE",
+      "name": "Peru",
+      "n_obs": 64,
+      "n_firms": 8
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "n_obs": 56,
+      "n_firms": 11
+    },
+    {
+      "code": "",
+      "name": "",
+      "n_obs": 54,
+      "n_firms": 13
+    },
+    {
+      "code": "AE",
+      "name": "United Arab Emirates",
+      "n_obs": 46,
+      "n_firms": 14
+    },
+    {
+      "code": "PA",
+      "name": "Panama",
+      "n_obs": 43,
+      "n_firms": 3
+    },
+    {
+      "code": "CZ",
+      "name": "Czech Republic",
+      "n_obs": 41,
+      "n_firms": 4
+    },
+    {
+      "code": "JE",
+      "name": "Jersey",
+      "n_obs": 40,
+      "n_firms": 8
+    },
+    {
+      "code": "HU",
+      "name": "Hungary",
+      "n_obs": 40,
+      "n_firms": 3
+    },
+    {
+      "code": "EG",
+      "name": "Egypt",
+      "n_obs": 39,
+      "n_firms": 9
+    },
+    {
+      "code": "CY",
+      "name": "Cyprus",
+      "n_obs": 38,
+      "n_firms": 11
+    },
+    {
+      "code": "QA",
+      "name": "Qatar",
+      "n_obs": 27,
+      "n_firms": 10
+    },
+    {
+      "code": "SA",
+      "name": "Saudi Arabia",
+      "n_obs": 25,
+      "n_firms": 6
+    },
+    {
+      "code": "OM",
+      "name": "Oman",
+      "n_obs": 19,
+      "n_firms": 5
+    },
+    {
+      "code": "BS",
+      "name": "Bahamas",
+      "n_obs": 18,
+      "n_firms": 3
+    },
+    {
+      "code": "UY",
+      "name": "Uruguay",
+      "n_obs": 17,
+      "n_firms": 2
+    },
+    {
+      "code": "MH",
+      "name": "Marshall Islands",
+      "n_obs": 16,
+      "n_firms": 1
+    },
+    {
+      "code": "KZ",
+      "name": "Kazakhstan",
+      "n_obs": 14,
+      "n_firms": 5
+    },
+    {
+      "code": "VG",
+      "name": "Virgin Islands; British",
+      "n_obs": 14,
+      "n_firms": 3
+    },
+    {
+      "code": "RO",
+      "name": "Romania",
+      "n_obs": 13,
+      "n_firms": 6
+    },
+    {
+      "code": "IM",
+      "name": "Isle of Man",
+      "n_obs": 13,
+      "n_firms": 3
+    },
+    {
+      "code": "KW",
+      "name": "Kuwait",
+      "n_obs": 10,
+      "n_firms": 3
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "n_obs": 10,
+      "n_firms": 3
+    },
+    {
+      "code": "VI",
+      "name": "Virgin Islands; United States",
+      "n_obs": 10,
+      "n_firms": 2
+    },
+    {
+      "code": "GG",
+      "name": "Guernsey",
+      "n_obs": 9,
+      "n_firms": 4
+    },
+    {
+      "code": "MA",
+      "name": "Morocco",
+      "n_obs": 9,
+      "n_firms": 2
+    },
+    {
+      "code": "IS",
+      "name": "Iceland",
+      "n_obs": 9,
+      "n_firms": 2
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "n_obs": 8,
+      "n_firms": 1
+    },
+    {
+      "code": "UA",
+      "name": "Ukraine",
+      "n_obs": 8,
+      "n_firms": 1
+    },
+    {
+      "code": "CR",
+      "name": "Costa Rica",
+      "n_obs": 7,
+      "n_firms": 1
+    },
+    {
+      "code": "BH",
+      "name": "Bahrain",
+      "n_obs": 5,
+      "n_firms": 1
+    },
+    {
+      "code": "PG",
+      "name": "Papua New Guinea",
+      "n_obs": 5,
+      "n_firms": 1
+    },
+    {
+      "code": "VE",
+      "name": "Venezuela",
+      "n_obs": 4,
+      "n_firms": 1
+    },
+    {
+      "code": "PK",
+      "name": "Pakistan",
+      "n_obs": 4,
+      "n_firms": 2
+    },
+    {
+      "code": "JO",
+      "name": "Jordan",
+      "n_obs": 3,
+      "n_firms": 1
+    },
+    {
+      "code": "BD",
+      "name": "Bangladesh",
+      "n_obs": 3,
+      "n_firms": 1
+    },
+    {
+      "code": "MO",
+      "name": "Macau",
+      "n_obs": 3,
+      "n_firms": 1
+    },
+    {
+      "code": "EE",
+      "name": "Estonia",
+      "n_obs": 2,
+      "n_firms": 2
+    },
+    {
+      "code": "LT",
+      "name": "Lithuania",
+      "n_obs": 2,
+      "n_firms": 2
+    },
+    {
+      "code": "GI",
+      "name": "Gibraltar",
+      "n_obs": 1,
+      "n_firms": 1
+    },
+    {
+      "code": "MU",
+      "name": "Mauritius",
+      "n_obs": 1,
+      "n_firms": 1
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "n_obs": 1,
+      "n_firms": 1
+    }
+  ],
+  "by_industry": [
+    {
+      "code": "9",
+      "name": "Business Services (BusSv)",
+      "n_obs": 12853,
+      "n_firms": 2031
+    },
+    {
+      "code": "16",
+      "name": "Pharmaceutical Products (Drugs)",
+      "n_obs": 7441,
+      "n_firms": 1204
+    },
+    {
+      "code": "19",
+      "name": "Trading & Other Finance (Fin)",
+      "n_obs": 6308,
+      "n_firms": 611
+    },
+    {
+      "code": "4",
+      "name": "Banking (Banks)",
+      "n_obs": 5373,
+      "n_firms": 534
+    },
+    {
+      "code": "11",
+      "name": "Electronic Equipment (Chips)",
+      "n_obs": 5238,
+      "n_firms": 590
+    },
+    {
+      "code": "37",
+      "name": "Retail (Rtail)",
+      "n_obs": 5171,
+      "n_firms": 649
+    },
+    {
+      "code": "32",
+      "name": "Petroleum & Natural Gas (Oil)",
+      "n_obs": 4394,
+      "n_firms": 528
+    },
+    {
+      "code": "43",
+      "name": "Communication (Telcm)",
+      "n_obs": 4011,
+      "n_firms": 453
+    },
+    {
+      "code": "45",
+      "name": "Transportation (Trans)",
+      "n_obs": 3508,
+      "n_firms": 439
+    },
+    {
+      "code": "47",
+      "name": "Utilities (Util)",
+      "n_obs": 3135,
+      "n_firms": 329
+    },
+    {
+      "code": "28",
+      "name": "Machinery (Mach)",
+      "n_obs": 2951,
+      "n_firms": 351
+    },
+    {
+      "code": "30",
+      "name": "Medical Equipment (MedEq)",
+      "n_obs": 2944,
+      "n_firms": 405
+    },
+    {
+      "code": "48",
+      "name": "Wholesale (Whlsl)",
+      "n_obs": 2839,
+      "n_firms": 351
+    },
+    {
+      "code": "26",
+      "name": "Insurance (Insur)",
+      "n_obs": 2756,
+      "n_firms": 267
+    },
+    {
+      "code": "15",
+      "name": "Computers (Comps)",
+      "n_obs": 2498,
+      "n_firms": 299
+    },
+    {
+      "code": "10",
+      "name": "Chemicals (Chems)",
+      "n_obs": 2264,
+      "n_firms": 283
+    },
+    {
+      "code": "6",
+      "name": "Construction Materials (BldMt)",
+      "n_obs": 1907,
+      "n_firms": 216
+    },
+    {
+      "code": "20",
+      "name": "Food Products (Food)",
+      "n_obs": 1770,
+      "n_firms": 244
+    },
+    {
+      "code": "3",
+      "name": "Automobiles & Trucks (Autos)",
+      "n_obs": 1712,
+      "n_firms": 235
+    },
+    {
+      "code": "29",
+      "name": "Restaurants, Hotels, Motels (Meals)",
+      "n_obs": 1591,
+      "n_firms": 199
+    },
+    {
+      "code": "24",
+      "name": "Healthcare (Hlth)",
+      "n_obs": 1545,
+      "n_firms": 233
+    },
+    {
+      "code": "27",
+      "name": "Measuring & Control Equipment (LabEq)",
+      "n_obs": 1488,
+      "n_firms": 169
+    },
+    {
+      "code": "13",
+      "name": "Construction (Cnstr)",
+      "n_obs": 1483,
+      "n_firms": 208
+    },
+    {
+      "code": "17",
+      "name": "Electrical Equipment (ElcEq)",
+      "n_obs": 1419,
+      "n_firms": 188
+    },
+    {
+      "code": "25",
+      "name": "Consumer Goods (Hshld)",
+      "n_obs": 1282,
+      "n_firms": 171
+    },
+    {
+      "code": "42",
+      "name": "Steel Works (Steel)",
+      "n_obs": 1256,
+      "n_firms": 171
+    },
+    {
+      "code": "35",
+      "name": "Personal Services (PerSv)",
+      "n_obs": 1228,
+      "n_firms": 164
+    },
+    {
+      "code": "21",
+      "name": "Entertainment (Fun)",
+      "n_obs": 1209,
+      "n_firms": 181
+    },
+    {
+      "code": "12",
+      "name": "Apparel (Clths)",
+      "n_obs": 1077,
+      "n_firms": 132
+    },
+    {
+      "code": "31",
+      "name": "Non-Metallic & Industrial Metal Mining (Mines)",
+      "n_obs": 1025,
+      "n_firms": 153
+    },
+    {
+      "code": "34",
+      "name": "Business Supplies (Paper)",
+      "n_obs": 1017,
+      "n_firms": 108
+    },
+    {
+      "code": "22",
+      "name": "Precious Metals (Gold)",
+      "n_obs": 968,
+      "n_firms": 133
+    },
+    {
+      "code": "33",
+      "name": "Other (Other)",
+      "n_obs": 684,
+      "n_firms": 112
+    },
+    {
+      "code": "7",
+      "name": "Printing & Publishing (Books)",
+      "n_obs": 625,
+      "n_firms": 85
+    },
+    {
+      "code": "36",
+      "name": "Real Estate (RlEst)",
+      "n_obs": 587,
+      "n_firms": 87
+    },
+    {
+      "code": "1",
+      "name": "Aircraft & Aerospace/Defense (Aero)",
+      "n_obs": 578,
+      "n_firms": 53
+    },
+    {
+      "code": "5",
+      "name": "Beer & Liquor (Beer)",
+      "n_obs": 488,
+      "n_firms": 60
+    },
+    {
+      "code": "44",
+      "name": "Recreation (Toys)",
+      "n_obs": 481,
+      "n_firms": 66
+    },
+    {
+      "code": "38",
+      "name": "Rubber & Plastics Products (Rubbr)",
+      "n_obs": 471,
+      "n_firms": 78
+    },
+    {
+      "code": "41",
+      "name": "Candy & Soda (Soda)",
+      "n_obs": 317,
+      "n_firms": 33
+    },
+    {
+      "code": "8",
+      "name": "Shipping Containers (Boxes)",
+      "n_obs": 301,
+      "n_firms": 35
+    },
+    {
+      "code": "14",
+      "name": "Coal (Coal)",
+      "n_obs": 287,
+      "n_firms": 42
+    },
+    {
+      "code": "39",
+      "name": "Shipbuilding & Railroad Equipment (Ships)",
+      "n_obs": 226,
+      "n_firms": 24
+    },
+    {
+      "code": "2",
+      "name": "Agriculture (Agric)",
+      "n_obs": 201,
+      "n_firms": 39
+    },
+    {
+      "code": "46",
+      "name": "Textiles (Txtls)",
+      "n_obs": 197,
+      "n_firms": 35
+    },
+    {
+      "code": "40",
+      "name": "Tobacco Products (Smoke)",
+      "n_obs": 164,
+      "n_firms": 15
+    },
+    {
+      "code": "23",
+      "name": "Defense (Guns)",
+      "n_obs": 158,
+      "n_firms": 19
+    },
+    {
+      "code": "18",
+      "name": "Fabricated Products (FabPr)",
+      "n_obs": 156,
+      "n_firms": 19
+    }
+  ]
+}

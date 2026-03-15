@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore — Social Exposure Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="navbar">
+    <span class="brand">Social Exposure Explorer</span>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="explore.html">Explore</a>
+      <a href="compare.html">Compare</a>
+      <a href="ranking.html">Ranking</a>
+      <a href="methods.html">Methods</a>
+    </nav>
+    <button class="hamburger" aria-label="Menu">&#9776;</button>
+  </header>
+
+  <div class="page-wrapper">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main-content">
+      <h1>Explore Trends</h1>
+      <p class="subtitle" id="explore-subtitle">Aggregate trend for selected measure(s)</p>
+
+      <p class="filter-hint">Select a measure from the sidebar, then optionally narrow the view to a specific country, industry, or firm. Adjust the year range and scale as needed. Without any entity selected, the chart shows the global average.</p>
+
+      <div class="view-controls">
+        <div>
+          <label>Scale:</label>
+          <select id="ctrl-scale"></select>
+        </div>
+      </div>
+
+      <div class="chart-container" style="height:420px" id="chart-wrap">
+        <canvas id="explore-chart"></canvas>
+      </div>
+
+      <div class="coverage-bar" id="coverage-bar"></div>
+    </div>
+  </div>
+
+  <script src="lib/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/explore.js"></script>
+</body>
+</html>
