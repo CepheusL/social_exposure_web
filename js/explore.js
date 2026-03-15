@@ -116,11 +116,13 @@
         const filtered = App.filterYears(data, yearMin, yearMax);
         const sortedYears = Object.keys(filtered).sort();
         const mKey = measures[0];
-        const covHtml = sortedYears.map(y => {
+        const covItems = sortedYears.map(y => {
           const entry = filtered[y] && filtered[y][mKey];
-          return entry ? `<span>${y}: ${entry.nfirm} firms</span>` : "";
-        }).join("");
-        document.getElementById("coverage-bar").innerHTML = covHtml;
+          return entry ? `<span>${y}: ${entry.nfirm.toLocaleString()}</span>` : "";
+        }).filter(Boolean).join("");
+        document.getElementById("coverage-bar").innerHTML = covItems
+          ? `<div class="coverage-title">Number of firms</div><div class="coverage-items">${covItems}</div>`
+          : "";
       } else {
         document.getElementById("coverage-bar").innerHTML = "";
       }

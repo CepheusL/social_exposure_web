@@ -43,7 +43,7 @@ const Charts = (() => {
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: { display: datasets.length > 1, position: "top" },
+          legend: { display: datasets.length > 1, position: "top", labels: { usePointStyle: true, pointStyle: "circle" } },
           tooltip: {
             callbacks: {
               afterBody: (items) => {

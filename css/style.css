@@ -185,8 +185,9 @@ a:hover { text-decoration: underline; }
 .coverage-bar {
   font-size: 0.75rem; color: var(--text-muted); padding: 8px 0;
   border-top: 1px solid var(--border); margin-top: 12px;
-  display: flex; flex-wrap: wrap; gap: 8px;
 }
+.coverage-title { font-weight: 600; margin-bottom: 6px; }
+.coverage-items { display: flex; flex-wrap: wrap; gap: 8px; }
 .coverage-bar span { white-space: nowrap; }
 
 /* ============ CARDS ============ */

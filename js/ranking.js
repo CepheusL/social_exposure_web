@@ -150,7 +150,28 @@
         const year = String(p.ranking_year || meta.year_max);
         entries = rankData.by_year[year] || [];
       } else {
-        entries = rankData.period || [];
+        // Compute period average dynamically from by_year data
+        const pStart = p.period_start || meta.year_min;
+        const pEnd = p.period_end || meta.year_max;
+        const entityMap = new Map();
+        for (let y = pStart; y <= pEnd; y++) {
+          const yearData = rankData.by_year[String(y)] || [];
+          yearData.forEach(e => {
+            if (!entityMap.has(e.id)) {
+              entityMap.set(e.id, { id: e.id, name: e.name, valSum: 0, valCount: 0, n: 0, nfirm: 0 });
+            }
+            const rec = entityMap.get(e.id);
+            rec.valSum += e.val;
+            rec.valCount++;
+            rec.n += e.n;
+            rec.nfirm = Math.max(rec.nfirm, e.nfirm);
+          });
+        }
+        entries = Array.from(entityMap.values()).map(rec => ({
+          id: rec.id, name: rec.name,
+          val: rec.valSum / rec.valCount,
+          n: rec.n, nfirm: rec.nfirm,
+        }));
       }
 
       // Filter by min coverage
