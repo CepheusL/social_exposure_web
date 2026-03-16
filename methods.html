@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data &amp; Methods — Social Exposure Explorer</title>
+  <title>Data &amp; Methods — Unpacking Social Exposure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
 </head>
 <body>
   <header class="navbar">
-    <span class="brand">Social Exposure Explorer</span>
+    <span class="brand">Unpacking Social Exposure</span>
     <nav>
       <a href="index.html">Overview</a>
       <a href="explore.html">Explore</a>
@@ -30,11 +30,11 @@
 
       <div class="method-section">
         <h2>Methodology</h2>
-        <p>The social exposure measures are constructed from corporate earnings conference call transcripts. We decompose social discussion into <strong>20 topics</strong> using a <strong>two-stage structured LLM method</strong>. The 20 topics are then grouped into <strong>5 domains</strong> (Employee Welfare, DEI, Stakeholder Outreach, Ethical Commitment, and Crisis Response), plus an overall Social Exposure measure that aggregates all dimensions.</p>
-        <p>All measures are computed as <strong>(sentences classified as social / total sentences) &times; 1000</strong> at the firm level per period.</p>
+        <p>The social exposure measures are constructed from corporate earnings conference call transcripts. We identify all social discussions and decompose them into <strong>20 topics</strong> using a <strong> structured LLM taxonomy geneartion approach</strong>. The 20 topics are then grouped into <strong>5 economic domains</strong> (Employee Welfare, DEI, Stakeholder Outreach, Ethical Commitment, and Crisis Response), plus an overall Social Exposure measure that aggregates all dimensions.</p>
+        <p>All measures are computed as <strong>(sentences devoted to specific social topic / total sentences in the conference call) &times; 1000</strong> at the firm level per period.</p>
         <p>For a detailed description of the methodology, please refer to our paper:</p>
         <p style="margin-left:20px;color:var(--text-secondary)">Liu, Sautner, van Lent, Vilkov, and Zhang. &ldquo;Unpacking Social Exposure.&rdquo;</p>
-        <p>The full dataset is available on our OSF repository: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">https://osf.io/kawbj</a></p>
+        <p>The full dataset with firm-year and firm-quarter level data is available on our OSF repository: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">https://osf.io/kawbj</a></p>
       </div>
 
       <div class="method-section">
@@ -97,7 +97,7 @@
         &nbsp;&middot;&nbsp; Data: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">osf.io/kawbj</a>
       </div>
       <div class="footer-links">
-        <a href="methods.html">Methods</a>
+        <a href="PAPER LINK PLACEHOLDER">Source Paper</a>
         <a href="https://osf.io/kawbj" target="_blank" rel="noopener">Data Repository</a>
       </div>
     </div>
