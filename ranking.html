@@ -6,7 +6,7 @@
   <title>Ranking — Social Exposure Explorer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -24,6 +24,7 @@
 
   <div class="page-wrapper no-sidebar">
     <div class="main-content" style="max-width:1100px">
+      <p class="page-eyebrow">League Tables</p>
       <h1>Rankings</h1>
       <p class="subtitle">Top and bottom entities by social exposure measures</p>
 
@@ -70,14 +71,31 @@
         </div>
       </div>
 
-      <p class="filter-hint">Rank countries, industries, or firms by any social exposure measure. Choose a single year or period average, set how many to show, and use "Min Obs" to exclude entities with few observations. Search to locate a specific entity — if it falls outside the displayed range, the table extends to reveal its position.</p>
+      <p class="filter-hint">Rank countries, industries, or firms by any social exposure measure. Choose a single year or period average, set how many to show, and use "Min Obs" to exclude entities with few observations. Search to locate a specific entity — if it falls outside the displayed range, the table extends to reveal its full position.</p>
 
-      <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
-        <input type="text" id="search-entity" placeholder="Search for an entity..." style="flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem">
-        <button class="btn btn-primary btn-sm" id="btn-export">Export CSV</button>
+      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="search-entity" placeholder="Search for an entity…"
+          style="flex:1;min-width:200px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.88rem;font-family:var(--font-body);transition:border-color 0.18s,box-shadow 0.18s"
+          onfocus="this.style.borderColor='var(--orange)';this.style.boxShadow='0 0 0 3px rgba(217,119,87,0.15)'"
+          onblur="this.style.borderColor='';this.style.boxShadow=''">
+        <button class="btn btn-sm" id="btn-export-csv">&#x2B07; CSV</button>
+        <button class="btn btn-sm" id="btn-export-img">&#x2B07; PNG</button>
+        <button class="btn btn-sm" id="btn-copy-link">&#x1F517; Link</button>
       </div>
 
       <div class="table-container" id="ranking-table-wrap">
+        <div class="ranking-sticky-bar" id="ranking-sticky-bar">
+          <span class="rsb-label">Viewing</span>
+          <span class="rsb-tag" id="rsb-direction">Top 20</span>
+          <span class="rsb-sep">·</span>
+          <span class="rsb-tag" id="rsb-entity">Countries</span>
+          <span class="rsb-sep">·</span>
+          <span class="rsb-tag" id="rsb-measure">Overall Social Exposure</span>
+          <span class="rsb-sep">·</span>
+          <span class="rsb-tag" id="rsb-period">2024</span>
+          <span class="rsb-sep">·</span>
+          <span style="color:var(--text-muted);font-size:0.72rem">Min obs: <span id="rsb-minobs">10</span></span>
+        </div>
         <table id="ranking-table">
           <thead><tr><th>#</th><th>Name</th><th>Value</th><th>Obs</th><th>Firms</th></tr></thead>
           <tbody></tbody>
@@ -85,6 +103,19 @@
       </div>
     </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-cite">
+        <strong>Citation:</strong> Liu, Sautner, van Lent, Vilkov, and Zhang. &ldquo;Unpacking Social Exposure.&rdquo;
+        &nbsp;&middot;&nbsp; Data: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">osf.io/kawbj</a>
+      </div>
+      <div class="footer-links">
+        <a href="methods.html">Methods</a>
+        <a href="https://osf.io/kawbj" target="_blank" rel="noopener">Data Repository</a>
+      </div>
+    </div>
+  </footer>
 
   <script src="lib/chart.umd.min.js"></script>
   <script src="js/app.js"></script>
