@@ -54,7 +54,6 @@ const App = (() => {
   const UNIT = "sentences per 1,000";
 
   const EVENTS = [
-    { from: 2008, to: 2009, label: "Financial crisis", short: "GFC" },
     { from: 2020, to: 2020, label: "COVID-19 · racial-justice protests", short: "COVID-19" },
   ];
 
