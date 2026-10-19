@@ -25,7 +25,6 @@
     stat: STATS[App.param("stat")] ? App.param("stat") : "mean",
     freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
     scale: App.param("scale") === "yoy" ? "yoy" : "level",
-    events: App.param("events") === "1",
     ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, LAST_YEAR),
     ymax: App.clamp(App.paramInt("year_max", LAST_YEAR), meta.year_min, LAST_YEAR),
   };
@@ -45,7 +44,6 @@
       entity_type: type, country: null, industry: null, firm: null, [type]: [...slots.keys()],
       measure: state.measure, stat: state.stat === "mean" ? null : state.stat,
       freq: state.freq === "annual" ? null : state.freq, scale: state.scale === "level" ? null : state.scale,
-      events: state.events ? "1" : null,
       year_min: state.ymin === meta.year_min ? null : state.ymin, year_max: state.ymax === LAST_YEAR ? null : state.ymax,
     });
   }
@@ -114,9 +112,6 @@
   const scaleSel = document.getElementById("ctrl-scale");
   scaleSel.value = state.scale;
   scaleSel.onchange = () => { state.scale = scaleSel.value; update(); };
-  const ev = document.getElementById("ctrl-events");
-  ev.checked = state.events;
-  ev.onchange = () => { state.events = ev.checked; update(); };
 
   /* ---------- Data ---------- */
   async function series(id) {
@@ -178,7 +173,7 @@
       Charts.line("compare-chart", { labels: periods, datasets }, {
         yLabel: state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : `${isFirm ? "Exposure" : STATS[stat].axis}${pct ? "" : ` (${unit})`}`,
         percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
-        events: state.events ? App.EVENTS[state.freq] : [], title: `${MEASURES[state.measure]} by ${type}`,
+        title: `${MEASURES[state.measure]} by ${type}`,
         valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
         filename: `compare_${state.measure}_${type}`,
       });

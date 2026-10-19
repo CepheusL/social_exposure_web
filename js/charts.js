@@ -41,52 +41,6 @@ const Charts = (() => {
     },
   };
 
-  // Shaded bands for events behind the data. Event ranges are period strings ("2020" or "2020Q2"), compared
-  // as strings against the x labels. Labels go above the plot, centred on the band or (ev.align = "end") ending at
-  // it with a pointer line; a label that collides with an earlier one moves up a row, then falls back to its short form.
-  const eventBands = {
-    id: "eventBands",
-    beforeDatasetsDraw(chart, _args, opts) {
-      if (!opts || !opts.events || !opts.events.length) return;
-      const x = chart.scales.x, area = chart.chartArea, labels = (chart.data.labels || []).map(String);
-      if (!x || !labels.length) return;
-      const ctx = chart.ctx;
-      const step = labels.length > 1 ? Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0)) : area.right - area.left;
-      const rowEnds = [-Infinity, -Infinity];
-      ctx.save();
-      ctx.font = `600 10px ${FONT}`;
-      ctx.textBaseline = "bottom";
-      opts.events.forEach((ev, k) => {
-        const idx = labels.map((l, i) => [l, i]).filter(([l]) => l >= ev.from && l <= ev.to).map(([, i]) => i);
-        if (!idx.length) return;
-        const left = Math.max(area.left, x.getPixelForValue(idx[0]) - step / 2);
-        const right = Math.min(area.right, x.getPixelForValue(idx[idx.length - 1]) + step / 2);
-        ctx.fillStyle = k % 2 ? "rgba(20,20,19,0.085)" : "rgba(20,20,19,0.045)";
-        ctx.fillRect(left, area.top, right - left, area.bottom - area.top);
-        const cx = (left + right) / 2;
-        for (const text of [ev.label, ev.short].filter(Boolean)) {
-          const w = ctx.measureText(text).width;
-          if (w > area.right - area.left - 4) continue;
-          // "end": label ends at the band's centre (with a pointer line down to it); default: centred over the band
-          const raw = ev.align === "end" ? cx - 4 - w : cx - w / 2;
-          const tx = Math.min(Math.max(raw, area.left + 2), area.right - w - 2);
-          const row = rowEnds.findIndex((end) => tx >= end + 8);
-          if (row < 0) continue;
-          const ty = area.top - 4 - row * 13;
-          ctx.fillStyle = MUTED;
-          ctx.fillText(text, tx, ty);
-          if (row > 0 || ev.align) {
-            ctx.strokeStyle = "rgba(111,109,102,0.6)"; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(cx, ty - 9); ctx.lineTo(cx, area.top); ctx.stroke();
-          }
-          rowEnds[row] = tx + w;
-          break;
-        }
-      });
-      ctx.restore();
-    },
-  };
-
   // Vertical guide line at the hovered period
   const crosshair = {
     id: "crosshair",
@@ -173,23 +127,7 @@ const Charts = (() => {
     },
   };
 
-  // Extra room under the legend so event labels (drawn above the plot area) never touch it
-  const legendGap = {
-    id: "legendGap",
-    beforeInit(chart) {
-      const legend = chart.legend;
-      if (!legend || legend._gapPatched) return;
-      const fit = legend.fit;
-      legend.fit = function () {
-        fit.call(this);
-        const ev = chart.options.plugins.eventBands;
-        if (this.options.display && ev && ev.events && ev.events.length) this.height += 10;
-      };
-      legend._gapPatched = true;
-    },
-  };
-
-  if (window.Chart) Chart.register(whiteBg, eventBands, crosshair, endLabels, segmentLabels, legendGap);
+  if (window.Chart) Chart.register(whiteBg, crosshair, endLabels, segmentLabels);
 
   /* ---------- Card chrome: toolbar, table view, captions ---------- */
 
@@ -272,7 +210,7 @@ const Charts = (() => {
 
   /**
    * Line chart. datasets: [{label, data, color, width, dash, meta}]
-   * opts: {yLabel, percent, zeroBase, events, endLabels, filename, title, valueFmt, legend, height}
+   * opts: {yLabel, percent, zeroBase, endLabels, filename, title, valueFmt, legend, yMax}
    */
   function line(canvasId, { labels, datasets }, opts = {}) {
     const canvas = document.getElementById(canvasId);
@@ -307,7 +245,7 @@ const Charts = (() => {
       maintainAspectRatio: false,
       animation: { duration: 350, easing: "easeOutQuart" },
       interaction: { mode: "index", intersect: false },
-      layout: { padding: { top: opts.events && opts.events.length ? (opts.events.length > 1 ? 33 : 20) : 6, right: 10, bottom: 0, left: 0 } },
+      layout: { padding: { top: 6, right: 10, bottom: 0, left: 0 } },
       plugins: {
         legend: {
           display: showLegend,
@@ -326,7 +264,6 @@ const Charts = (() => {
             },
           },
         },
-        eventBands: { events: opts.events || [] },
         endLabels: { enabled: opts.endLabels !== undefined ? opts.endLabels : datasets.length > 1,
                      width: _textWidth(datasets.map((d) => d.label)), maxWidth: 190 },
       },
@@ -400,7 +337,7 @@ const Charts = (() => {
                    callbacks: { label: (c) => ` ${c.dataset.label}: ${c.parsed.x == null ? "–" : c.parsed.x.toFixed(1) + "%"}`,
                                 footer: (items) => { const r = rows[items[0].dataIndex]; return r && r.note ? r.note : ""; } } },
         segmentLabels: { enabled: true },
-        endLabels: { enabled: false }, eventBands: { events: [] },
+        endLabels: { enabled: false },
       },
       scales: {
         x: { stacked: true, min: 0, max: 100, grid: { color: GRID }, border: { display: false },
@@ -433,7 +370,7 @@ const Charts = (() => {
     const options = {
       responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
       plugins: { legend: { display: false }, tooltip: { ..._tooltip, callbacks: { label: (c) => ` ${label}: ${App.num(c.parsed.y)}` } },
-                 endLabels: { enabled: false }, eventBands: { events: [] } },
+                 endLabels: { enabled: false } },
       scales: {
         x: { grid: { display: false }, border: { color: AXIS }, ticks: { color: MUTED, font: { size: 10.5 }, maxRotation: 0, autoSkipPadding: 10 } },
         y: { beginAtZero: true, grid: { color: GRID }, border: { display: false }, ticks: { color: MUTED, font: { size: 10.5 }, maxTicksLimit: 4 } },

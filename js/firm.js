@@ -71,7 +71,6 @@
   const state = {
     measure: MEASURES[App.param("measure")] ? App.param("measure") : "social",
     freq: App.param("freq") === "quarterly" || !rec ? "quarterly" : "annual",
-    events: App.param("events") === "1",
   };
   const mSel = document.getElementById("ctrl-measure");
   mSel.innerHTML = MEASURE_KEYS.map((k) => `<option value="${k}">${esc(MEASURES[k])}</option>`).join("");
@@ -82,14 +81,11 @@
     onChange: (v) => { state.freq = v; renderMain(); },
   });
   if (!rec) freqCtrl.setDisabled("annual", true);
-  const ev = document.getElementById("ctrl-events");
-  ev.checked = state.events;
-  ev.onchange = () => { state.events = ev.checked; renderMain(); };
 
   const body = document.getElementById("main-body");
   let token = 0;
   async function renderMain() {
-    App.setParams({ measure: state.measure === "social" ? null : state.measure, freq: state.freq === "annual" ? null : state.freq, events: state.events ? "1" : null });
+    App.setParams({ measure: state.measure === "social" ? null : state.measure, freq: state.freq === "annual" ? null : state.freq });
     const my = ++token;
     App.busy(body, true);
     try {
@@ -113,7 +109,7 @@
       document.getElementById("main-caption").textContent =
         `Firm-level exposure compared with the mean across firms in its industry (Fama-French 48), its headquarters country, and the full sample.`;
       Charts.line("firm-chart", { labels: periods, datasets }, {
-        yLabel: "Exposure (sentences per 1,000)", events: state.events ? App.EVENTS[freq] : [], title: `${firm.name}: ${MEASURES[m]}`,
+        yLabel: "Exposure (sentences per 1,000)", title: `${firm.name}: ${MEASURES[m]}`,
         filename: `firm_${firm.id}_${m}`,
       });
     } catch (e) { console.error(e); App.toast("Could not load data: " + e.message); }

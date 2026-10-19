@@ -22,7 +22,6 @@
     freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
     scale: App.param("scale") === "yoy" ? "yoy" : "level",
     view: App.param("view") === "mix" ? "mix" : "trend",
-    events: App.param("events") === "1",
     peers: App.param("peers") === "1",
     ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, LAST_YEAR),
     ymax: App.clamp(App.paramInt("year_max", LAST_YEAR), meta.year_min, LAST_YEAR),
@@ -48,7 +47,6 @@
       freq: state.freq === "annual" ? null : state.freq,
       scale: state.scale === "level" ? null : state.scale,
       view: state.view === "trend" ? null : state.view,
-      events: state.events ? "1" : null,
       peers: state.peers ? "1" : null,
       year_min: state.ymin === meta.year_min ? null : state.ymin,
       year_max: state.ymax === LAST_YEAR ? null : state.ymax,
@@ -128,9 +126,6 @@
   const scaleSel = document.getElementById("ctrl-scale");
   scaleSel.value = state.scale;
   scaleSel.onchange = () => { state.scale = scaleSel.value; update(); };
-  const evBox = document.getElementById("ctrl-events");
-  evBox.checked = state.events;
-  evBox.onchange = () => { state.events = evBox.checked; update(); };
   const peersBox = document.getElementById("ctrl-peers");
   peersBox.checked = state.peers;
   peersBox.onchange = () => { state.peers = peersBox.checked; update(); };
@@ -141,7 +136,6 @@
     statSel.disabled = isFirm || isMix;
     statSel.title = isFirm ? "A single firm has one value per period" : isMix ? "The domain mix uses means" : "";
     scaleSel.disabled = isMix;
-    evBox.disabled = isMix;
     freqCtrl.setDisabled("quarterly", isMix);
     const peersOk = isFirm && !isMix && state.measures.length === 1;
     peersBox.disabled = !peersOk;
@@ -248,7 +242,7 @@
     clearEmpty();
     Charts.line("explore-chart", { labels: periods, datasets }, {
       yLabel, percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
-      events: state.events ? App.EVENTS[state.freq] : [], title: name,
+      title: name,
       valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
       filename: `explore_${(name || "global").replace(/\W+/g, "_")}`,
     });
