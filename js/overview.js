@@ -19,7 +19,7 @@
   const shareSeries = years.map((y) => shareOf(y));
   document.getElementById("hero-stat").innerHTML = `
     <div class="big">${Math.round(shareOf(last) * 100)}<small>%</small></div>
-    <p>of firms discussed at least one social topic on their earnings calls in ${last}.</p>
+    <p>of firms discussed a social topic on their ${last} earnings calls.</p>
     <div class="hero-spark">${Charts.spark(shareSeries, { color: "#f2b9a3", width: 2.2, h: 54, yMax: 1 })}</div>
     <p class="from">Up from ${pct(shareOf(first))} in ${first} · peak ${pct(Math.max(...shareSeries))} in ${years[shareSeries.indexOf(Math.max(...shareSeries))]}</p>`;
 
@@ -61,12 +61,12 @@
   const dei = years.map((y) => shareOf(y, "dei"));
   const deiPeak = Math.max(...dei), deiPeakYear = years[dei.indexOf(deiPeak)];
   const tiles = [
-    { value: pct(insights.ever_share_10y), label: "of firms observed for 10+ years discuss social topics at some point",
+    { value: pct(insights.ever_share_10y), label: "of firms with 10 or more years of data discuss social topics",
       sub: `${num(insights.n_firms_10y)} firms` },
-    { value: growth.toFixed(1) + "×", label: `higher average exposure in ${insights.late_period.join("–")} than in ${insights.early_period.join("–")}`,
+    { value: growth.toFixed(1) + "×", label: `average exposure in ${insights.late_period.join("–")} versus ${insights.early_period.join("–")}`,
       sub: `${insights.global_early.toFixed(2)} → ${insights.global_late.toFixed(2)} sentences per 1,000` },
-    { value: `${above} of ${DOMAIN_KEYS.length}`, label: `domains are discussed by more firms in ${last} than before COVID-19 (${pre})`,
-      sub: "Attention persisted after the pandemic" },
+    { value: `${above} of ${DOMAIN_KEYS.length}`, label: `domains reach more firms in ${last} than in ${pre}`,
+      sub: "Share of firms discussing each domain" },
     { value: pct(deiPeak), label: `of firms discussed DEI at its ${deiPeakYear} peak`,
       sub: `${pct(shareOf(first, "dei"))} in ${first} · ${pct(shareOf(last, "dei"))} in ${last}` },
   ];
@@ -84,7 +84,7 @@
        title: "Share of firms discussing any social topic", filename: "share_of_firms_discussing" });
 
   /* ---------- What: domain rows ---------- */
-  document.getElementById("domain-sub").textContent = `% of firms discussing each domain, annual ${first}–${last}`;
+  document.getElementById("domain-sub").textContent = `% of firms discussing each domain, ${first}–${last}`;
   document.getElementById("domain-list").innerHTML = DOMAIN_KEYS.map((m) => {
     const s = years.map((y) => shareOf(y, m));
     return `<a class="domain-row" href="${App.link("explore.html", { measures: m, stat: "share" })}">
@@ -124,19 +124,17 @@
       <span class="db-ticks">${ticks.map((t) => `<span style="left:${X(t)}%">${t}</span>`).join("")}</span><span></span>
     </div>`;
   document.getElementById("dumbbell-caption").textContent =
-    `Countries with at least 25 firms in ${e0}–${e1} and 50 firms in ${l0}–${l1}. Coverage outside the United States ` +
-    `reflects which firms appear in the earnings-call data, typically larger, internationally listed companies, ` +
-    `so cross-country gaps partly reflect sample composition.`;
+    `Countries with at least 25 firms in ${e0}–${e1} and 50 firms in ${l0}–${l1}.`;
 
   /* ---------- Quick links ---------- */
   const links = [
-    { title: "Trends over time", desc: "Global, country, industry or firm trends for any domain and statistic.", href: "explore.html" },
-    { title: "Compare countries", desc: "Put the largest markets side by side on one measure.",
+    { title: "Trends over time", desc: "Trends for all firms, a country, an industry or one firm.", href: "explore.html" },
+    { title: "Compare countries", desc: "The largest markets side by side.",
       href: App.link("compare.html", { entity_type: "country", country: ["US", "GB", "CA", "JP", "CN", "DE"], measure: "social" }) },
-    { title: "Firm profiles", desc: "Any firm's exposure by domain, its percentile and its closest peers.", href: "firm.html" },
-    { title: "Rankings", desc: "League tables of firms, countries and industries by year or period.", href: "ranking.html" },
-    { title: "Industry heatmap and map", desc: "All 48 industries and every country across years at a glance.", href: "patterns.html" },
-    { title: "DEI over time", desc: "The rise and retreat of diversity, equity and inclusion on earnings calls.",
+    { title: "Firm profiles", desc: "Each firm's exposure by domain, its rank and its peers.", href: "firm.html" },
+    { title: "Rankings", desc: "Top firms, countries and industries by year or period.", href: "ranking.html" },
+    { title: "Industry heatmap and map", desc: "Every industry and country, year by year.", href: "patterns.html" },
+    { title: "DEI over time", desc: "The rise and fall of DEI on earnings calls.",
       href: App.link("explore.html", { measures: "dei", stat: "share" }) },
   ];
   document.getElementById("quick-links").innerHTML = links.map((l) =>

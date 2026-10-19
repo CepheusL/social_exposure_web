@@ -13,7 +13,7 @@
 
   /* ================= Profile ================= */
   document.getElementById("firm-view").hidden = false;
-  document.title = `${firm.name} — Unpacking Social Exposure`;
+  document.title = `${firm.name} | Unpacking Social Exposure`;
   App.rememberFirm(firm.id);
   App.combobox({ input: document.getElementById("firm-search"), list: document.getElementById("firm-search-list"),
                  getItems: (q) => App.searchFirms(q, 15), onSelect: goFirm });
@@ -37,7 +37,7 @@
 
   if (!rec) {
     document.getElementById("kpis").innerHTML = `<div class="notice notice-info" style="grid-column:1/-1">
-      This firm only has quarterly data (${firm.first}). Annual views start once a full year is available; switch the chart to Quarterly.</div>`;
+      This firm has quarterly data only (${firm.first}). Switch the chart to Quarterly.</div>`;
   } else {
     renderKPIs();
     renderDomains();
@@ -55,13 +55,13 @@
     const sum = DOMAIN_KEYS.reduce((a, m) => a + tot[m], 0);
     const dom = sum > 0 ? DOMAIN_KEYS.reduce((a, m) => (tot[m] > tot[a] ? m : a), DOMAIN_KEYS[0]) : null;
     const tiles = [
-      { label: `Exposure in ${y}`, value: v == null ? "–" : v.toFixed(2), sub: gm == null ? "" : `All-firm mean: ${gm.toFixed(2)} sentences per 1,000` },
+      { label: `Exposure in ${y}`, value: v == null ? "–" : v.toFixed(2), sub: gm == null ? "" : `All-firm mean ${gm.toFixed(2)} sentences per 1,000` },
       { label: `Percentile in ${y}`, value: rec.pct[i] == null ? "–" : ord(Math.min(99, Math.max(1, Math.floor(rec.pct[i])))),
-        sub: `Within country: ${rec.pct_ctry[i] == null ? "–" : ord(Math.min(99, Math.max(1, Math.floor(rec.pct_ctry[i]))))} · within industry: ${rec.pct_ind[i] == null ? "–" : ord(Math.min(99, Math.max(1, Math.floor(rec.pct_ind[i]))))}` },
+        sub: `${rec.pct_ctry[i] == null ? "–" : ord(Math.min(99, Math.max(1, Math.floor(rec.pct_ctry[i]))))} in its country · ${rec.pct_ind[i] == null ? "–" : ord(Math.min(99, Math.max(1, Math.floor(rec.pct_ind[i]))))} in its industry` },
       { label: "Years with social discussion", value: `${nPos} <span style="font-size:1rem;color:var(--muted);font-weight:500">of ${rec.years.length}</span>`,
         sub: `Average exposure ${rec.avg == null ? "–" : rec.avg.toFixed(2)} across all years` },
       { label: "Most-discussed domain", value: dom ? `<span class="measure-dot" style="background:${MEASURE_COLORS[dom]};width:12px;height:12px"></span><span style="font-size:1.1rem">${esc(MEASURES[dom])}</span>` : "–",
-        sub: dom ? `${Math.round((tot[dom] / sum) * 100)}% of its domain exposure, all years` : "No domain exposure recorded" },
+        sub: dom ? `${Math.round((tot[dom] / sum) * 100)}% of its domain exposure` : "No domain exposure yet" },
     ];
     document.getElementById("kpis").innerHTML = tiles.map((t) => `
       <div class="kpi"><div class="k-label">${esc(t.label)}</div><div class="k-value">${t.value}</div><div class="k-sub">${esc(t.sub)}</div></div>`).join("");
@@ -101,13 +101,13 @@
       const periods = Object.keys(map).sort();
       const agg = (d) => periods.map((p) => (d && d[p] && d[p][m] ? d[p][m].mean : null));
       const datasets = [{ label: firm.name, data: periods.map((p) => map[p][m]), color: MEASURE_COLORS[m], width: 2.8 }];
-      if (ind) datasets.push({ label: `Industry: ${App.industryShort(firm.industry)}`, data: agg(ind), color: REF_COLOR, width: 1.6, order: 1 });
-      if (ctry) datasets.push({ label: `Country: ${App.countryName(firm.country)}`, data: agg(ctry), color: REF_COLOR, width: 1.6, dash: [6, 4], order: 1 });
-      datasets.push({ label: "All firms", data: agg(all), color: REF_COLOR, width: 1.6, dash: [2, 3], order: 1 });
-      document.getElementById("main-title").textContent = `${MEASURES[m]}: ${firm.name} and its context`;
-      document.getElementById("main-sub").textContent = `${freq === "quarterly" ? "Quarterly" : "Annual"} · sentences per 1,000 · grey lines are means across firms`;
+      if (ind) datasets.push({ label: `Industry mean (${App.industryShort(firm.industry)})`, data: agg(ind), color: REF_COLOR, width: 1.6, order: 1 });
+      if (ctry) datasets.push({ label: `Country mean (${App.countryName(firm.country)})`, data: agg(ctry), color: REF_COLOR, width: 1.6, dash: [6, 4], order: 1 });
+      datasets.push({ label: "All-firm mean", data: agg(all), color: REF_COLOR, width: 1.6, dash: [2, 3], order: 1 });
+      document.getElementById("main-title").textContent = `${firm.name} against its industry, country and all firms`;
+      document.getElementById("main-sub").textContent = `${MEASURES[m]} · ${freq === "quarterly" ? "quarterly" : "annual"} · sentences per 1,000`;
       document.getElementById("main-caption").textContent =
-        `Firm-level exposure compared with the mean across firms in its industry (Fama-French 48), its headquarters country, and the full sample.`;
+        `Grey lines show the mean for the firm's industry (Fama-French 48), its headquarters country and all firms.`;
       Charts.line("firm-chart", { labels: periods, datasets }, {
         yLabel: "Exposure (sentences per 1,000)", title: `${firm.name}: ${MEASURES[m]}`,
         filename: `firm_${firm.id}_${m}`,
@@ -121,7 +121,7 @@
   function renderDomains() {
     const yMax = Math.max(0.5, ...DOMAIN_KEYS.flatMap((m) => rec[m].filter((v) => v != null)));
     const top = Math.ceil(yMax);
-    document.getElementById("dm-sub").textContent = `Annual exposure, ${rec.years[0]}–${rec.years[rec.years.length - 1]}; same scale (0–${top}) in every panel; grey = all-firm mean`;
+    document.getElementById("dm-sub").textContent = `Annual exposure, ${rec.years[0]}–${rec.years[rec.years.length - 1]}. All panels share one scale. Grey shows the all-firm mean.`;
     document.getElementById("domains").innerHTML = DOMAIN_KEYS.map((m) => {
       const vals = rec[m];
       const ref = rec.years.map((y) => (global[String(y)] && global[String(y)][m] ? global[String(y)][m].mean : null));
@@ -150,7 +150,7 @@
   /* ---------- Peers ---------- */
   async function renderPeers() {
     const box = document.getElementById("peers");
-    if (!rec.peers || !rec.peers.length) { box.innerHTML = `<p class="chart-caption" style="padding:16px 20px">No comparable firms with enough data in this industry.</p>`; return; }
+    if (!rec.peers || !rec.peers.length) { box.innerHTML = `<p class="chart-caption" style="padding:16px 20px">No other firm in this industry has five or more years of data.</p>`; return; }
     const rows = [[firm.id, rec.avg, true], ...rec.peers.map(([pid, avg]) => [pid, avg, false])];
     const maxV = Math.max(...rows.map((r) => r[1] || 0), 1e-9);
     const parts = await Promise.all(rows.map(async ([pid, avg, self]) => {

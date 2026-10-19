@@ -35,7 +35,7 @@
     slots = new Map();
     const ids = App.paramList(t);
     ids.slice(0, MAX).forEach((id, i) => slots.set(id, i));
-    if (ids.length > MAX) App.notice(document.getElementById("notice"), `Compare shows up to ${MAX} entities; the first ${MAX} are shown.`, "warn");
+    if (ids.length > MAX) App.notice(document.getElementById("notice"), `Compare shows up to ${MAX} at a time. These are the first ${MAX}.`, "warn");
   }
   const freeSlot = () => { for (let i = 0; i < MAX; i++) if (![...slots.values()].includes(i)) return i; return -1; };
 
@@ -71,7 +71,7 @@
     },
     onSelect: (it) => {
       const s = freeSlot();
-      if (s < 0) { App.toast(`Up to ${MAX} at a time — remove one first`); return; }
+      if (s < 0) { App.toast(`The limit is ${MAX}. Remove one to add another.`); return; }
       slots.set(it.id, s); input.value = ""; renderChips(); update();
     },
   });
@@ -143,11 +143,12 @@
     const statLabel = isFirm ? "Firm value" : STATS[stat].label;
     document.getElementById("chart-title").textContent = `${MEASURES[state.measure]} · ${TYPE_LABEL[type]}`;
     document.getElementById("chart-sub").textContent =
-      `${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq}`;
+      `${statLabel}${state.scale === "yoy" ? " · change from a year earlier" : ""} · ${state.freq}`;
+    const group = type === "country" ? "each country (by headquarters)" : "each industry (Fama-French 48)";
     document.getElementById("chart-caption").textContent = isFirm
-      ? "Firm-level exposure: sentences on the topic per 1,000 sentences of each firm's earnings calls."
-      : `${statLabel} across the firms in each ${type === "country" ? "country (by headquarters)" : "industry (Fama-French 48)"}; ` +
-        `${pct ? "share of firms with at least one sentence on the topic" : "sentences per 1,000"}. Hover to see the number of firms.`;
+      ? "Sentences on the topic per 1,000 sentences of each firm's earnings calls."
+      : (pct ? `Share of firms in ${group} with at least one sentence on the topic.` : `${statLabel} across the firms in ${group}, in sentences per 1,000.`) +
+        " Hover to see the number of firms.";
 
     const ids = [...slots.keys()];
     if (!ids.length) { renderEmpty(); return; }
@@ -217,7 +218,7 @@
     const el = document.createElement("div");
     el.className = "empty-state"; el.id = "chart-empty";
     el.innerHTML = `<div class="empty-state-title">Add ${TYPE_LABEL[type].toLowerCase()} to compare</div>
-      <p>Search in the panel on the left, or start from a preset:</p>
+      <p>Search in the left panel or pick a preset.</p>
       <div class="dialog-actions" style="justify-content:center">
         ${PRESETS[type].map(([l], i) => `<button type="button" class="btn btn-sm" data-preset="${i}">${esc(l)}</button>`).join("")}
       </div>`;

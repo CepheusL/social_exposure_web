@@ -141,9 +141,8 @@
         aria-label="${esc(name)}: ${fmtV(v)} in ${state.year}, ${nf} firms">${code}</button>`;
     }).join("");
     document.getElementById("map-caption").textContent =
-      `Each tile is a headquarters country, arranged roughly by geography. Colour shows the ${STATS[state.stat].label.toLowerCase()} ` +
-      `across the country's firms in ${state.year}; the scale is fixed across years so the animation is comparable. ` +
-      `Countries with fewer than ${MIN_FIRMS} firms that year are grey.`;
+      `Each tile is a headquarters country, placed roughly by geography. Colour shows the ${STATS[state.stat].label.toLowerCase()} ` +
+      `across the country's firms in ${state.year}, on one scale for all years. Grey tiles have fewer than ${MIN_FIRMS} firms.`;
   }
   document.getElementById("tilemap").addEventListener("click", (e) => {
     const t = e.target.closest(".tile[data-code]");
@@ -185,8 +184,8 @@
     }).join("");
     grid.innerHTML = head + body;
     document.getElementById("hm-caption").textContent = state.rows === "country"
-      ? `Countries with at least ${HEAT_MIN_COUNTRY} firms in ${years[last]}. Cells with fewer than ${MIN_FIRMS} firms are grey. Same colour scale as the map.`
-      : `All 48 Fama-French industries. Cells with fewer than ${MIN_FIRMS} firms are grey. Same colour scale as the map.`;
+      ? `Countries with at least ${HEAT_MIN_COUNTRY} firms in ${years[last]}. Grey cells have fewer than ${MIN_FIRMS} firms. The colours match the map.`
+      : `All 48 Fama-French industries. Grey cells have fewer than ${MIN_FIRMS} firms. The colours match the map.`;
   }
   bindTips(document.getElementById("heatmap-grid"));
 

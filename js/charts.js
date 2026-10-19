@@ -260,7 +260,7 @@ const Charts = (() => {
             footer: (items) => {
               const m = items[0] && items[0].dataset._meta;
               const e = m && m[items[0].dataIndex];
-              return e && e.nfirm !== undefined ? `Firms in sample: ${App.num(e.nfirm)}` : "";
+              return e && e.nfirm !== undefined ? `${App.num(e.nfirm)} firms` : "";
             },
           },
         },

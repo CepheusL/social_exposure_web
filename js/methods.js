@@ -13,7 +13,7 @@
 
   const [coverage, meta] = await Promise.all([App.loadJSON("coverage.json"), App.getMeta()]);
   document.getElementById("coverage-note").textContent =
-    `Annual data cover ${meta.year_min}–${meta.year_max}; ${meta.quarter_max.slice(0, 4)} contains only ${meta.quarter_max} and appears in the quarterly views. ` +
+    `Annual data cover ${meta.year_min}–${meta.year_max}. For ${meta.quarter_max.slice(0, 4)} only ${meta.quarter_max} is available, so it appears in the quarterly views. ` +
     `Each firm is assigned to its most recent headquarters country and Fama-French 48 industry.`;
 
   document.getElementById("coverage-year").innerHTML = `<table>

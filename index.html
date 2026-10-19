@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Unpacking Social Exposure</title>
-  <meta name="description" content="Explore how firms around the world discuss employee welfare, DEI, stakeholders, ethics and crises on their earnings calls, 2003–2025Q1. Data from Liu, Sautner, van Lent & Zhang (2026).">
+  <meta name="description" content="How firms worldwide discuss employee welfare, DEI, stakeholders, ethics and crises on their earnings calls, 2003–2025Q1.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Unpacking Social Exposure — data explorer">
-  <meta property="og:description" content="How firms around the world discuss social topics on their earnings calls, 2003–2025Q1.">
+  <meta property="og:title" content="Unpacking Social Exposure | Data explorer">
+  <meta property="og:description" content="How firms worldwide discuss social topics on their earnings calls, 2003–2025Q1.">
   <meta property="og:image" content="og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -27,7 +27,7 @@
         <div>
           <p class="eyebrow">Data explorer · Earnings calls 2003–2025Q1</p>
           <h1 id="hero-title">Unpacking Social Exposure</h1>
-          <p class="hero-desc">How much do firms talk about their employees, diversity, communities, ethics and crises when they speak to investors? Explore firm-level measures built from earnings-call transcripts for <span id="hero-firms">15,000+</span> firms in <span id="hero-ctry">90+</span> countries.</p>
+          <p class="hero-desc">How much do firms tell investors about employees, diversity, communities, ethics and crises? Explore measures from the earnings calls of <span id="hero-firms">15,000+</span> firms in <span id="hero-ctry">90+</span> countries.</p>
           <div class="hero-actions">
             <a href="explore.html" class="btn btn-hero">Start exploring &rarr;</a>
             <div class="search-box combo">
@@ -45,15 +45,15 @@
         <div class="section-head">
           <div>
             <h2 id="featured-title">Featured companies</h2>
-            <p class="lede">Each company has its own trajectory: some peaked years before COVID-19, others only recently. Lines show a 3-year average, coloured by the company's most-discussed domain, against the average firm.</p>
+            <p class="lede">Firms peak at different times. Each line is a three-year average, coloured by the firm's most-discussed domain.</p>
           </div>
           <a class="section-link" href="firm.html">Search all firms</a>
         </div>
         <div class="tabs-row">
           <div id="region-tabs"></div>
           <div class="spark-legend" aria-hidden="true">
-            <span><i class="measure-line" style="width:20px;background:linear-gradient(90deg,#2a78d6 0 25%,#eb6834 25% 50%,#1baf7a 50% 75%,#eda100 75%)"></i>Company, by most-discussed domain</span>
-            <span><i class="measure-line" style="background:#c9c7bf"></i>All firms</span>
+            <span><i class="measure-line" style="width:20px;background:linear-gradient(90deg,#2a78d6 0 25%,#eb6834 25% 50%,#1baf7a 50% 75%,#eda100 75%)"></i>Firm, by main domain</span>
+            <span><i class="measure-line" style="background:#c9c7bf"></i>Average firm</span>
           </div>
         </div>
         <div class="featured-grid" id="featured-grid"></div>
@@ -68,7 +68,7 @@
         <div class="section-head">
           <div>
             <h2 id="who-title">Who talks, and about what</h2>
-            <p class="lede">The share of firms that bring up social topics with investors has roughly doubled since 2003. COVID-19 caused a temporary surge, but every domain remains above its pre-pandemic level.</p>
+            <p class="lede">The share of firms that raise social topics has doubled since 2003. Every domain still reaches more firms than in 2019.</p>
           </div>
           <a class="section-link" href="explore.html?stat=share">Explore shares</a>
         </div>
@@ -77,13 +77,13 @@
             <div class="chart-head">
               <div>
                 <h3 class="chart-title">Firms discussing any social topic</h3>
-                <p class="chart-sub">% of firms with at least one social sentence in the year's earnings calls</p>
+                <p class="chart-sub">% of firms with at least one social sentence in the year</p>
               </div>
               <div class="chart-tools"></div>
             </div>
             <div class="chart-body" style="height:330px"><canvas id="share-chart"></canvas></div>
             <figcaption class="chart-foot">
-              <p class="chart-caption">All firms in the sample, annual 2003–2024.</p>
+              <p class="chart-caption">All firms, 2003–2024.</p>
               <button class="link-btn table-toggle" type="button">View as table</button>
             </figcaption>
             <div class="chart-table" hidden></div>
@@ -104,7 +104,7 @@
         <div class="section-head">
           <div>
             <h2 id="where-title">Around the world</h2>
-            <p class="lede">Average social exposure by headquarters country, early 2010s versus the most recent years. Exposure rose everywhere; the United States sits in the middle of the pack.</p>
+            <p class="lede">Social exposure rose in every major country. The United States sits mid-table.</p>
           </div>
           <a class="section-link" href="patterns.html">Open the map</a>
         </div>
@@ -175,8 +175,8 @@
   <div id="site-footer"></div>
 
   <script src="lib/chart.umd.min.js"></script>
-  <script src="js/app.js?v=15"></script>
-  <script src="js/charts.js?v=15"></script>
-  <script src="js/overview.js?v=15"></script>
+  <script src="js/app.js?v=16"></script>
+  <script src="js/charts.js?v=16"></script>
+  <script src="js/overview.js?v=16"></script>
 </body>
 </html>

@@ -33,7 +33,7 @@
     const type = scope;
     const ids = lists[type];
     App.notice(document.getElementById("notice"),
-      `Explore shows one ${type} at a time; showing the first of ${totalEntities} selected.
+      `Explore shows one ${type} at a time.
        <a class="btn btn-sm" href="${App.link("compare.html", { entity_type: type, [type]: ids, measure: state.measures[0] })}">Open all ${ids.length} in Compare →</a>`);
   }
 
@@ -134,13 +134,13 @@
     const isFirm = state.scope === "firm" && state.entity;
     const isMix = state.view === "mix";
     statSel.disabled = isFirm || isMix;
-    statSel.title = isFirm ? "A single firm has one value per period" : isMix ? "The domain mix uses means" : "";
+    statSel.title = isFirm ? "A firm has one value per period" : isMix ? "The domain mix uses means" : "";
     scaleSel.disabled = isMix;
     freqCtrl.setDisabled("quarterly", isMix);
     const peersOk = isFirm && !isMix && state.measures.length === 1;
     peersBox.disabled = !peersOk;
-    document.getElementById("peers-wrap").title = !isFirm ? "Select a firm to compare it with its industry and country"
-      : state.measures.length !== 1 ? "Select a single measure to compare with peers" : "";
+    document.getElementById("peers-wrap").title = !isFirm ? "Select a firm first"
+      : state.measures.length !== 1 ? "Select one measure first" : "";
   }
 
   /* ---------- Data ---------- */
@@ -207,13 +207,13 @@
       const firm = await App.getFirm(id);
       const m = state.measures[0];
       const refs = [];
-      if (firm && firm.industry) refs.push(["industry", firm.industry, `Industry: ${App.industryShort(firm.industry)}`, []]);
-      if (firm && firm.country) refs.push(["country", firm.country, `Country: ${App.countryName(firm.country)}`, [6, 4]]);
-      refs.push(["global", null, "All firms", [2, 3]]);
+      if (firm && firm.industry) refs.push(["industry", firm.industry, `Industry mean (${App.industryShort(firm.industry)})`, []]);
+      if (firm && firm.country) refs.push(["country", firm.country, `Country mean (${App.countryName(firm.country)})`, [6, 4]]);
+      refs.push(["global", null, "All-firm mean", [2, 3]]);
       const series = await Promise.all(refs.map(([k, rid]) => getSeries(k, rid, state.freq)));
       if (my !== token) return;
       series.forEach((rs, i) => datasets.push({
-        label: refs[i][2] + " (mean)", color: REF_COLOR, width: 1.6, dash: refs[i][3], order: 1,
+        label: refs[i][2], color: REF_COLOR, width: 1.6, dash: refs[i][3], order: 1,
         data: applyScale(periods.map((p) => rs.value(p, m, "mean"))),
       }));
       datasets[0].label = name;
@@ -223,18 +223,19 @@
     titleEl.textContent = name;
     const mLabel = state.measures.length === 1 ? MEASURES[state.measures[0]] : `${state.measures.length} measures`;
     document.getElementById("chart-sub").textContent =
-      `${mLabel} · ${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq === "quarterly" ? "quarterly" : "annual"}${periods.length ? `, ${periods[0]}–${periods[periods.length - 1]}` : ""}`;
+      `${mLabel} · ${statLabel}${state.scale === "yoy" ? " · change from a year earlier" : ""} · ${state.freq === "quarterly" ? "quarterly" : "annual"}${periods.length ? `, ${periods[0]}–${periods[periods.length - 1]}` : ""}`;
 
     const unit = pct ? "% of firms" : "sentences per 1,000";
     const yLabel = state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : s.firm ? `Exposure (${unit})` : `${STATS[stat].axis}${pct ? "" : ` (${unit})`}`;
+    const who = scopeKey === "global" ? "all firms" : scopeKey === "country" ? `firms headquartered in ${name}` : `firms in ${name}`;
     document.getElementById("chart-caption").textContent = s.firm
-      ? `Firm-level exposure: sentences on each topic per 1,000 sentences of the firm's earnings calls in the ${state.freq === "quarterly" ? "quarter" : "year"}.` +
-        (peersOn ? " Grey lines show the mean across all firms in the firm's industry, its country, and the full sample." : "")
-      : `${statLabel} across firms ${scopeKey === "global" ? "in the full sample" : `headquartered in or classified to ${name}`}, ` +
-        `${pct ? "share of firms with at least one sentence on the topic" : "sentences per 1,000"}. Hover for the number of firms.`;
+      ? `Sentences on each topic per 1,000 sentences of the firm's earnings calls in the ${state.freq === "quarterly" ? "quarter" : "year"}.` +
+        (peersOn ? " Grey lines show the mean for the firm's industry, its country and all firms." : "")
+      : (pct ? `Share of ${who} with at least one sentence on the topic.` : `${statLabel} across ${who}, in sentences per 1,000.`) +
+        " Hover to see the number of firms.";
 
     if (!periods.length) {
-      showEmpty("No data in this year range for the current selection.");
+      showEmpty("No data for this selection and year range.");
       Charts.line("explore-chart", { labels: [], datasets: [] }, {});
       renderCoverage(null, []);
       return;
@@ -270,11 +271,10 @@
     document.getElementById("chart-title").textContent = name;
     const inRange = s.periods.filter((p) => +p >= state.ymin && +p <= state.ymax);
     document.getElementById("chart-sub").textContent =
-      `Share of each domain in total domain exposure, by period${inRange.length ? `, ${inRange[0]}–${inRange[inRange.length - 1]}` : ""}`;
+      `Domain shares by period${inRange.length ? `, ${inRange[0]}–${inRange[inRange.length - 1]}` : ""}`;
     document.getElementById("chart-caption").textContent =
-      `Each bar splits the period's combined exposure to the five domains into percentages${s.firm ? "" : " (based on mean exposure across firms)"}. ` +
-      `Periods are grouped so that 2020–21 (COVID-19) stands apart.`;
-    if (!rows.length) { showEmpty("No data in this year range."); return; }
+      `Each bar splits a period's exposure across the five domains.`;
+    if (!rows.length) { showEmpty("No data for this year range."); return; }
     clearEmpty();
     Charts.stackRows("explore-chart", {
       rows, keys: DOMAIN_KEYS.map((m) => ({ key: m, label: MEASURES[m], color: MEASURE_COLORS[m], ink: m === "emp" ? "#ffffff" : Charts.INK })),

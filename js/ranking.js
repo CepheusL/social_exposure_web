@@ -85,12 +85,12 @@
       minCtrl.hidden = !period;
       document.getElementById("min-label").textContent = "Min years";
       minIn.min = 1; minIn.max = state.p1 - state.p0 + 1; minIn.value = state.minYears;
-      minCtrl.title = "Only firms with data in at least this many years of the period";
+      minCtrl.title = "Minimum years of data in the period";
     } else {
       minCtrl.hidden = false;
       document.getElementById("min-label").textContent = period ? "Min firms / yr" : "Min firms";
       minIn.min = 0; minIn.removeAttribute("max"); minIn.value = state.minFirms;
-      minCtrl.title = "Hide countries or industries with fewer firms (average per year in period mode)";
+      minCtrl.title = "Minimum number of firms per year";
     }
   }
 
@@ -187,7 +187,7 @@
     </tr>`;
     const tbody = document.getElementById("ranking-body");
     if (!ranked.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">No entries match these filters. Try lowering the minimum${isFirm ? " years" : " firms"}.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">Nothing matches these filters. Lower the minimum${isFirm ? " years" : " firms"} to see more.</td></tr>`;
       document.getElementById("ranking-more").innerHTML = "";
       return;
     }
@@ -214,8 +214,8 @@
     const btn = document.getElementById("show-more");
     if (btn) btn.onclick = () => { shown = Math.min(ranked.length, shown + 25); drawTable(); };
     document.getElementById("ranking-caption").textContent = isFirm
-      ? `Firm exposure is the firm's annual value${period ? ", averaged over the years with data in the period" : ""}. Percentile is relative to all ranked firms.`
-      : `Country and industry values are the mean across their firms${period ? ", averaged over the years in the period" : ""}. Percentile is relative to all ranked ${TYPE_LABEL[entity].toLowerCase()}.`;
+      ? `Values are each firm's annual exposure${period ? ", averaged over its years in the period" : ""}. Percentiles compare against all ranked firms.`
+      : `Values are the mean across each ${entity === "country" ? "country's" : "industry's"} firms${period ? ", averaged over the period" : ""}. Percentiles compare against all ranked ${TYPE_LABEL[entity].toLowerCase()}.`;
   }
 
   /* ---------- Search within the ranking ---------- */

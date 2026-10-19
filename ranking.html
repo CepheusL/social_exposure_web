@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ranking — Unpacking Social Exposure</title>
+  <title>Ranking | Unpacking Social Exposure</title>
   <meta name="description" content="League tables of firms, countries and industries by social exposure on earnings calls, by year or period.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Rankings — Unpacking Social Exposure">
+  <meta property="og:title" content="Rankings | Unpacking Social Exposure">
   <meta property="og:description" content="Which firms, countries and industries discuss social topics most on their earnings calls?">
   <meta property="og:image" content="og-image.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -24,7 +24,7 @@
     <main class="main-content" id="main">
       <p class="page-eyebrow">League tables</p>
       <h1>Rankings</h1>
-      <p class="subtitle">Rank firms, countries or industries on any measure, for a single year or averaged over a period. Firm rankings default to a multi-year average so one unusual call does not dominate.</p>
+      <p class="subtitle">Rank firms, countries or industries on any measure, by year or over a period. Firm rankings use a multi-year average by default, which smooths out single calls.</p>
 
       <button type="button" class="btn btn-sm controls-toggle" id="controls-toggle" aria-controls="rank-controls" aria-expanded="false" style="margin-bottom:12px">Filters</button>
       <div class="view-controls collapsible" id="rank-controls" role="group" aria-label="Ranking options">
@@ -44,7 +44,7 @@
       <div class="ranking-toolbar">
         <div class="combo search-box light">
           <label class="sr-only" for="search-entity">Find in ranking</label>
-          <input type="search" id="search-entity" placeholder="Find a firm, country or industry in this ranking…">
+          <input type="search" id="search-entity" placeholder="Find in this ranking…">
           <div class="dropdown-list" id="search-list"></div>
         </div>
         <button type="button" class="btn btn-sm" id="btn-csv">CSV</button>
@@ -69,8 +69,8 @@
   <div id="site-footer"></div>
 
   <script src="lib/chart.umd.min.js"></script>
-  <script src="js/app.js?v=15"></script>
-  <script src="js/charts.js?v=15"></script>
-  <script src="js/ranking.js?v=15"></script>
+  <script src="js/app.js?v=16"></script>
+  <script src="js/charts.js?v=16"></script>
+  <script src="js/ranking.js?v=16"></script>
 </body>
 </html>
