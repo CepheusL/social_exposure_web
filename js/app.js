@@ -1,417 +1,493 @@
-/* ============ app.js — Shared core ============ */
+/* ============ app.js — shared core: constants, site chrome, data access, UI helpers ============ */
 
 const App = (() => {
+  /* ---------- Site constants (single source of truth) ---------- */
+  const SITE = {
+    name: "Unpacking Social Exposure",
+    paperUrl: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6770779",
+    dataUrl: "https://osf.io/kawbj",
+    shortCite: "Liu, Sautner, van Lent & Zhang (2026)",
+    citation:
+      "Liu, Mingyang and Sautner, Zacharias and van Lent, Laurence and Zhang, Ruishen, Unpacking Social Exposure " +
+      "(May 15, 2026). TRR 266 Accounting for Transparency Working Paper Series No. 235, HKU Jockey Club Enterprise " +
+      "Sustainability Global Research Institute Paper No. 2026/087, Available at SSRN: https://ssrn.com/abstract=6770779 " +
+      "or http://dx.doi.org/10.2139/ssrn.6770779",
+    bibtex:
+`@techreport{liu2026unpacking,
+  title       = {Unpacking Social Exposure},
+  author      = {Liu, Mingyang and Sautner, Zacharias and van Lent, Laurence and Zhang, Ruishen},
+  year        = {2026},
+  month       = may,
+  type        = {TRR 266 Accounting for Transparency Working Paper Series},
+  number      = {235},
+  institution = {SSRN},
+  doi         = {10.2139/ssrn.6770779},
+  url         = {https://ssrn.com/abstract=6770779}
+}`,
+  };
+
+  const NAV = [
+    ["index.html", "Overview"], ["explore.html", "Explore"], ["compare.html", "Compare"],
+    ["firm.html", "Firms"], ["ranking.html", "Ranking"], ["patterns.html", "Patterns"], ["methods.html", "Methods"],
+  ];
+
+  /* Measures: order matters (adjacent colours are validated for colour-vision deficiency in this order) */
   const MEASURES = {
-    emp:    "Employee Welfare",
-    dei:    "DEI",
-    stk:    "Stakeholder Outreach",
-    eth:    "Ethical Commitment",
-    crisis: "Crisis Response",
-    social: "Overall Social Exposure",
+    emp: "Employee Welfare", dei: "DEI", stk: "Stakeholder Outreach",
+    eth: "Ethical Commitment", crisis: "Crisis Response", social: "Overall Social Exposure",
   };
-  const MEASURE_KEYS = Object.keys(MEASURES);
-  const STATS  = ["mean","median","p10","p25","p75","p90"];
-  const SCALES = { level:"Level", index:"Index (base=100)", yoy:"Year-over-Year Change" };
-
-  // Colors kept consistent with chart colors (for sidebar dots etc.)
+  const MEASURE_KEYS = ["emp", "dei", "stk", "eth", "crisis", "social"];
+  const DOMAIN_KEYS = ["emp", "dei", "stk", "eth", "crisis"];
   const MEASURE_COLORS = {
-    emp:    "#8ECFC9",
-    dei:    "#FFBE7A",
-    stk:    "#FA7F6F",
-    eth:    "#82B0D2",
-    crisis: "#BEB8DC",
-    social: "#E7DAD2",
+    emp: "#2a78d6", dei: "#eb6834", stk: "#1baf7a", eth: "#eda100", crisis: "#e87ba4", social: "#141413",
   };
 
-  // Base path detection for GitHub Pages
+  const STATS = {
+    mean:     { label: "Mean",                        axis: "Mean exposure" },
+    median:   { label: "Median",                      axis: "Median exposure" },
+    p75:      { label: "75th percentile",             axis: "75th percentile of exposure" },
+    p90:      { label: "90th percentile",             axis: "90th percentile of exposure" },
+    share:    { label: "Share of firms discussing",   axis: "% of firms discussing", pct: true },
+    mean_pos: { label: "Mean among firms discussing", axis: "Mean exposure among firms discussing" },
+  };
+  const STAT_KEYS = Object.keys(STATS);
+  const UNIT = "sentences per 1,000";
+
+  const EVENTS = [
+    { from: 2008, to: 2009, label: "Financial crisis", short: "GFC" },
+    { from: 2020, to: 2020, label: "COVID-19 · racial-justice protests", short: "COVID-19" },
+  ];
+
+  /* ---------- Small utilities ---------- */
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = (n) => (n == null || isNaN(n) ? "–" : Number(n).toLocaleString("en-US"));
+  const periodYear = (p) => +String(p).slice(0, 4);
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  /** Format a statistic value for display. Shares are stored as fractions (0–1). */
+  function fmt(v, stat = "mean", digits) {
+    if (v == null || isNaN(v)) return "–";
+    if (STATS[stat] && STATS[stat].pct) return (v * 100).toFixed(digits ?? 0) + "%";
+    return Number(v).toFixed(digits ?? 2);
+  }
+
+  /* Base path for GitHub Pages project sites */
   const BASE_PATH = (() => {
     const path = window.location.pathname;
-    const htmlFile = path.match(/\/[^/]*\.html$/);
-    return htmlFile ? path.slice(0, path.lastIndexOf('/')) : path.replace(/\/$/, '');
+    return /\/[^/]*\.html$/.test(path) ? path.slice(0, path.lastIndexOf("/")) : path.replace(/\/$/, "");
   })();
 
+  /* Data requests carry the build date as a version so browsers never mix old and new data files;
+     meta.json itself is always revalidated. */
   const _cache = new Map();
-  async function loadJSON(relPath) {
-    if (_cache.has(relPath)) return _cache.get(relPath);
-    const resp = await fetch(BASE_PATH + "/data/" + relPath);
-    if (!resp.ok) throw new Error(`Failed to load ${relPath}: ${resp.status}`);
-    const data = await resp.json();
-    _cache.set(relPath, data);
-    return data;
+  function _fetchJSON(url, init) {
+    return fetch(url, init).then((resp) => {
+      if (!resp.ok) throw new Error(`Failed to load ${url.split("/data/")[1] || url} (${resp.status})`);
+      return resp.json();
+    });
   }
-
-  // --- URL State ---
-  function getParams() {
-    const p = new URLSearchParams(window.location.search);
-    return {
-      measure:       p.get("measure") || "social",
-      measures:      p.get("measures") ? p.get("measures").split(",") : null,
-      year_min:      p.get("year_min")      ? +p.get("year_min")      : null,
-      year_max:      p.get("year_max")      ? +p.get("year_max")      : null,
-      country:       p.get("country")  ? p.get("country").split(",")  : [],
-      industry:      p.get("industry") ? p.get("industry").split(",") : [],
-      firm:          p.get("firm")     ? p.get("firm").split(",")     : [],
-      stat:          p.get("stat")     || "mean",
-      scale:         p.get("scale")    || "level",
-      view:          p.get("view")     || "trend",
-      entity_type:   p.get("entity_type")   || "country",
-      ranking_mode:  p.get("ranking_mode")  || "single",
-      ranking_year:  p.get("ranking_year")  ? +p.get("ranking_year")  : null,
-      period_start:  p.get("period_start")  ? +p.get("period_start")  : null,
-      period_end:    p.get("period_end")    ? +p.get("period_end")    : null,
-      top_n:         p.get("top_n")         ? +p.get("top_n")         : 20,
-      direction:     p.get("direction")     || "top",
-      min_coverage:  p.get("min_coverage")  ? +p.get("min_coverage")  : 0,
-      search_entity: p.get("search_entity") || "",
-    };
-  }
-
-  function setParams(obj) {
-    const p = new URLSearchParams(window.location.search);
-    for (const [k, v] of Object.entries(obj)) {
-      if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0)) {
-        p.delete(k);
-      } else if (Array.isArray(v)) {
-        p.set(k, v.join(","));
-      } else {
-        p.set(k, String(v));
-      }
+  function loadJSON(relPath) {
+    if (!_cache.has(relPath)) {
+      const p = relPath === "meta.json"
+        ? _fetchJSON(BASE_PATH + "/data/meta.json", { cache: "no-cache" })
+        : loadJSON("meta.json").then((m) => _fetchJSON(`${BASE_PATH}/data/${relPath}?v=${encodeURIComponent(m.build_id || m.build_date)}`));
+      p.catch(() => _cache.delete(relPath));
+      _cache.set(relPath, p);
     }
-    const newUrl = window.location.pathname + (p.toString() ? "?" + p.toString() : "");
-    window.history.replaceState(null, "", newUrl);
+    return _cache.get(relPath);
   }
 
-  // --- Slice Pill ---
-  function updateSlicePill(parts) {
-    const el = document.getElementById("slice-pill");
-    if (!el) return;
-    if (!parts || parts.length === 0) { el.style.display = "none"; return; }
-    el.style.display = "inline-flex";
-    el.innerHTML = parts.map((p, i) =>
-      (i > 0 ? '<span class="pill-sep">·</span>' : '') +
-      `<span class="pill-val">${p}</span>`
-    ).join("");
+  /* ---------- URL state ---------- */
+  function q() { return new URLSearchParams(window.location.search); }
+  function param(key, fallback = null) { const v = q().get(key); return v === null || v === "" ? fallback : v; }
+  function paramInt(key, fallback = null) { const v = param(key); return v === null || isNaN(+v) ? fallback : +v; }
+  function paramList(key) { const v = param(key); return v ? v.split(",").filter(Boolean) : []; }
+  function setParams(obj) {
+    const p = q();
+    for (const [k, v] of Object.entries(obj)) {
+      if (v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0)) p.delete(k);
+      else p.set(k, Array.isArray(v) ? v.join(",") : String(v));
+    }
+    const s = p.toString();
+    window.history.replaceState(null, "", window.location.pathname + (s ? "?" + s : ""));
+  }
+  function link(page, params = {}) {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined && v !== "") p.set(k, Array.isArray(v) ? v.join(",") : v);
+    const s = p.toString();
+    return page + (s ? "?" + s : "");
   }
 
-  // --- Toast ---
-  function toast(msg, duration = 3000) {
+  /* ---------- Clipboard, toast, dialogs ---------- */
+  async function copy(text, msg = "Copied") {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+    }
+    toast(msg);
+  }
+
+  function toast(msg, duration = 2600) {
     let el = document.getElementById("toast");
     if (!el) {
       el = document.createElement("div");
-      el.id = "toast"; el.className = "toast";
+      el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); el.setAttribute("aria-live", "polite");
       document.body.appendChild(el);
     }
     el.textContent = msg;
     el.classList.add("show");
-    clearTimeout(el._timer);
-    el._timer = setTimeout(() => el.classList.remove("show"), duration);
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove("show"), duration);
   }
 
-  // --- Loading overlay ---
-  function showLoading(container) {
-    let ov = container.querySelector(".loading-overlay");
-    if (!ov) {
-      ov = document.createElement("div");
-      ov.className = "loading-overlay";
-      ov.innerHTML = '<div class="spinner"></div>';
-      container.style.position = "relative";
-      container.appendChild(ov);
+  function openCite() {
+    let dlg = document.getElementById("cite-dialog");
+    if (!dlg) {
+      dlg = document.createElement("dialog");
+      dlg.id = "cite-dialog"; dlg.className = "dialog";
+      dlg.setAttribute("aria-labelledby", "cite-dialog-title");
+      dlg.innerHTML = `
+        <div class="dialog-head">
+          <h2 id="cite-dialog-title">Cite this work</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close">&times;</button>
+        </div>
+        <p class="dialog-label">Citation</p>
+        <p class="cite-text">${esc(SITE.citation)}</p>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-sm" data-copy="cite">Copy citation</button>
+          <a class="btn btn-sm" href="${SITE.paperUrl}" target="_blank" rel="noopener">Open paper on SSRN</a>
+        </div>
+        <p class="dialog-label">BibTeX</p>
+        <pre class="cite-bib">${esc(SITE.bibtex)}</pre>
+        <div class="dialog-actions"><button type="button" class="btn btn-sm" data-copy="bib">Copy BibTeX</button></div>`;
+      document.body.appendChild(dlg);
+      dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+      dlg.querySelector('[data-copy="cite"]').addEventListener("click", () => copy(SITE.citation, "Citation copied"));
+      dlg.querySelector('[data-copy="bib"]').addEventListener("click", () => copy(SITE.bibtex, "BibTeX copied"));
     }
-    ov.style.display = "flex";
-
-    // Show skeleton behind spinner too
-    let sk = container.querySelector(".chart-skeleton");
-    if (!sk) {
-      sk = document.createElement("div");
-      sk.className = "chart-skeleton";
-      container.insertBefore(sk, container.firstChild);
-    }
-    sk.style.display = "block";
-    return ov;
-  }
-  function hideLoading(container) {
-    const ov = container.querySelector(".loading-overlay");
-    if (ov) ov.style.display = "none";
-    const sk = container.querySelector(".chart-skeleton");
-    if (sk) sk.style.display = "none";
+    dlg.showModal();
   }
 
-  // --- Navbar ---
-  function initNavbar() {
+  /* ---------- Site chrome (header + footer injected on every page) ---------- */
+  function renderChrome() {
     const page = window.location.pathname.split("/").pop() || "index.html";
-    document.querySelectorAll(".navbar nav a").forEach(a => {
-      const href = a.getAttribute("href").split("?")[0];
-      if (href === page || (page === "" && href === "index.html")) {
-        a.classList.add("active");
-      }
-    });
-    const hamburger = document.querySelector(".hamburger");
-    const nav = document.querySelector(".navbar nav");
-    if (hamburger && nav) {
-      hamburger.addEventListener("click", () => nav.classList.toggle("open"));
+    const header = document.getElementById("site-header");
+    if (header) {
+      header.outerHTML = `
+        <header class="navbar">
+          <a class="brand" href="index.html">${SITE.name}</a>
+          <nav id="site-nav" aria-label="Main">
+            ${NAV.map(([href, label]) =>
+              `<a href="${href}"${href === page ? ' class="active" aria-current="page"' : ""}>${label}</a>`).join("")}
+          </nav>
+          <button class="hamburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <span></span><span></span><span></span>
+          </button>
+        </header>`;
     }
+    const footer = document.getElementById("site-footer");
+    if (footer) {
+      footer.outerHTML = `
+        <footer class="site-footer">
+          <div class="footer-inner">
+            <p class="footer-cite">${esc(SITE.shortCite)}. <em>Unpacking Social Exposure</em>. SSRN Working Paper 6770779.</p>
+            <nav class="footer-links" aria-label="Footer">
+              <a href="${SITE.paperUrl}" target="_blank" rel="noopener">Paper</a>
+              <a href="${SITE.dataUrl}" target="_blank" rel="noopener">Data (OSF)</a>
+              <button type="button" class="footer-cite-btn" data-open-cite>Cite</button>
+            </nav>
+            <p class="footer-version" id="footer-version"></p>
+          </div>
+        </footer>`;
+      getMeta().then((m) => {
+        const el = document.getElementById("footer-version");
+        if (el) el.textContent = `Data: ${m.data_version} · ${num(m.n_firms)} firms, ${m.year_min}–${m.year_max} · Site data built ${m.build_date}`;
+      }).catch(() => {});
+    }
+    document.querySelectorAll("[data-open-cite]").forEach((b) => b.addEventListener("click", openCite));
 
-    // Mobile sidebar drawer
-    const toggleBtn = document.getElementById("sidebar-toggle-mobile");
-    const overlay   = document.getElementById("drawer-overlay");
-    const sidebar   = document.getElementById("sidebar");
-    if (toggleBtn && overlay && sidebar) {
-      toggleBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        overlay.classList.toggle("open");
-      });
-      overlay.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        overlay.classList.remove("open");
+    const burger = document.querySelector(".hamburger");
+    const nav = document.getElementById("site-nav");
+    if (burger && nav) {
+      burger.addEventListener("click", () => {
+        const open = nav.classList.toggle("open");
+        burger.setAttribute("aria-expanded", String(open));
       });
     }
   }
 
-  // --- Lookups ---
-  let _countries = null, _industries = null, _firms = null, _meta = null;
-  async function getCountries()  { if (!_countries)  _countries  = await loadJSON("countries.json");  return _countries; }
-  async function getIndustries() { if (!_industries) _industries = await loadJSON("industries.json"); return _industries; }
-  async function getFirms()      { if (!_firms)      _firms      = await loadJSON("firms.json");      return _firms; }
-  async function getMeta()       { if (!_meta)       _meta       = await loadJSON("meta.json");       return _meta; }
-
-  // --- Filter Panel ---
-  async function buildFilterPanel(container, options = {}) {
-    const {
-      showMeasure = true,
-      multiMeasure = false,
-      showYearRange = true,
-      showCountry = true,
-      showIndustry = true,
-      showFirm = true,
-      multiSelectEntities = false,
-      onFilterChange = () => {},
-    } = options;
-
-    const meta   = await getMeta();
-    const params = getParams();
-    let html = "";
-
-    if (showMeasure) {
-      if (multiMeasure) {
-        html += `<div class="filter-group"><label>Measures</label><div id="filter-measures">`;
-        for (const k of MEASURE_KEYS) {
-          const checked = params.measures ? params.measures.includes(k) : k === params.measure;
-          const color   = MEASURE_COLORS[k];
-          html += `<label class="measure-checkbox-item">
-            <input type="checkbox" value="${k}" ${checked ? "checked" : ""}>
-            <span class="measure-dot" style="background:${color}"></span>
-            ${MEASURES[k]}</label>`;
-        }
-        html += `</div></div>`;
-      } else {
-        html += `<div class="filter-group"><label>Measure</label>
-          <div style="position:relative">
-            <select id="filter-measure">`;
-        for (const k of MEASURE_KEYS) {
-          html += `<option value="${k}" ${k === params.measure ? "selected" : ""}>${MEASURES[k]}</option>`;
-        }
-        html += `</select>
-            <div id="measure-swatch" style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;font-size:0.76rem;color:var(--text-muted);font-family:var(--font-heading)">
-              <span class="measure-dot" id="measure-dot-indicator" style="background:${MEASURE_COLORS[params.measure || 'social']}"></span>
-              <span id="measure-color-label">${MEASURES[params.measure || 'social']}</span>
-            </div>
-          </div></div>`;
-      }
+  /** Mobile drawer for a sidebar or a controls panel. */
+  function initDrawer(toggleId, panelId) {
+    const btn = document.getElementById(toggleId);
+    const panel = document.getElementById(panelId);
+    if (!btn || !panel) return;
+    let overlay = document.getElementById("drawer-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "drawer-overlay"; overlay.className = "drawer-overlay";
+      document.body.appendChild(overlay);
     }
-
-    if (showYearRange) {
-      const ymin = params.year_min || meta.year_min;
-      const ymax = params.year_max || meta.year_max;
-      html += `<div class="filter-group"><label>Year Range</label>
-        <div class="year-range">
-          <input type="number" id="filter-ymin" value="${ymin}" min="${meta.year_min}" max="${meta.year_max}">
-          <span>to</span>
-          <input type="number" id="filter-ymax" value="${ymax}" min="${meta.year_min}" max="${meta.year_max}">
-        </div></div>`;
-    }
-
-    if (showCountry) {
-      html += `<div class="filter-group"><label>Country</label>
-        <div class="chip-input-wrap" id="country-wrap">
-          <input type="text" id="filter-country-input" placeholder="Search countries...">
-          <div class="dropdown-list" id="country-dropdown"></div>
-        </div></div>`;
-    }
-    if (showIndustry) {
-      html += `<div class="filter-group"><label>Industry (FF48)</label>
-        <div class="chip-input-wrap" id="industry-wrap">
-          <input type="text" id="filter-industry-input" placeholder="Search industries...">
-          <div class="dropdown-list" id="industry-dropdown"></div>
-        </div></div>`;
-    }
-    if (showFirm) {
-      html += `<div class="filter-group"><label>Firm</label>
-        <div class="chip-input-wrap" id="firm-wrap">
-          <input type="text" id="filter-firm-input" placeholder="Search firms...">
-          <div class="dropdown-list" id="firm-dropdown"></div>
-        </div></div>`;
-    }
-
-    html += `<div class="filter-actions">
-      <button class="btn btn-sm" id="filter-clear">Clear All</button>
-      <button class="btn btn-sm" id="filter-copy-link">&#x1F517; Link</button>
-    </div>`;
-
-    container.innerHTML = html;
-
-    // Wire events
-    const fireChange = () => {
-      const p = {};
-      if (showMeasure && !multiMeasure) {
-        p.measure = document.getElementById("filter-measure").value;
-        // Update dot indicator
-        const dot   = document.getElementById("measure-dot-indicator");
-        const label = document.getElementById("measure-color-label");
-        if (dot)   dot.style.background = MEASURE_COLORS[p.measure];
-        if (label) label.textContent    = MEASURES[p.measure];
-      }
-      if (showMeasure && multiMeasure) {
-        const checks = container.querySelectorAll("#filter-measures input:checked");
-        const vals   = Array.from(checks).map(c => c.value);
-        p.measures = vals.length > 0 ? vals : ["social"];
-      }
-      if (showYearRange) {
-        p.year_min = +document.getElementById("filter-ymin").value;
-        p.year_max = +document.getElementById("filter-ymax").value;
-      }
-      setParams(p);
-      onFilterChange(getParams());
+    const set = (open) => {
+      panel.classList.toggle("open", open);
+      overlay.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", String(open));
     };
+    btn.setAttribute("aria-controls", panelId);
+    btn.setAttribute("aria-expanded", "false");
+    btn.addEventListener("click", () => set(!panel.classList.contains("open")));
+    overlay.addEventListener("click", () => set(false));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") set(false); });
+  }
 
-    container.querySelectorAll("select, input[type=number]").forEach(el => el.addEventListener("change", fireChange));
-    container.querySelectorAll("#filter-measures input[type=checkbox]").forEach(el => el.addEventListener("change", fireChange));
+  /* ---------- Data access ---------- */
+  let _meta, _countries, _industries, _firms, _firmMap, _cMap, _iMap;
+  async function getMeta() { if (!_meta) _meta = await loadJSON("meta.json"); return _meta; }
+  async function getCountries() {
+    if (!_countries) { _countries = await loadJSON("countries.json"); _cMap = new Map(_countries.map((c) => [c.code, c])); }
+    return _countries;
+  }
+  async function getIndustries() {
+    if (!_industries) { _industries = await loadJSON("industries.json"); _iMap = new Map(_industries.map((i) => [i.code, i])); }
+    return _industries;
+  }
+  async function getFirms() {
+    if (!_firms) {
+      const d = await loadJSON("firms.json");
+      _firms = d.rows.map((r) => ({ id: r[0], name: r[1], country: r[2], industry: r[3], first: r[4], last: r[5] }));
+      _firmMap = new Map(_firms.map((f) => [f.id, f]));
+    }
+    return _firms;
+  }
+  async function getFirm(id) { await getFirms(); return _firmMap.get(String(id)) || null; }
+  async function lookups() { await Promise.all([getCountries(), getIndustries()]); }
+  const countryName = (code) => (_cMap && _cMap.get(code) ? _cMap.get(code).name : code || "–");
+  const industryName = (code) => (_iMap && _iMap.get(code) ? _iMap.get(code).name : code || "–");
+  const industryShort = (code) => (_iMap && _iMap.get(code) ? _iMap.get(code).short : code || "–");
 
-    if (showCountry) {
-      const countries = await getCountries();
-      setupChipInput("country", countries.map(c => ({ id: c.code, label: `${c.name} (${c.code})` })),
-        params.country, countries, fireChange, false, multiSelectEntities);
-    }
-    if (showIndustry) {
-      const industries = await getIndustries();
-      setupChipInput("industry", industries.map(i => ({ id: i.code, label: `${i.name} (${i.code})` })),
-        params.industry, industries, fireChange, false, multiSelectEntities);
-    }
-    if (showFirm) {
-      setupChipInput("firm", [], params.firm, [], fireChange, true, multiSelectEntities);
-    }
-
-    document.getElementById("filter-clear").addEventListener("click", () => { window.location.search = ""; });
-    document.getElementById("filter-copy-link").addEventListener("click", () => {
-      navigator.clipboard.writeText(window.location.href).then(() => toast("Link copied!"));
+  /** Aggregates: kind = global | country | industry; freq = annual | quarterly. */
+  function loadAgg(kind, id, freq = "annual") {
+    const dir = freq === "quarterly" ? "agg_q" : "agg";
+    return loadJSON(kind === "global" ? `${dir}/global.json` : `${dir}/${kind}/${id}.json`);
+  }
+  async function loadFirm(id, freq = "annual") {
+    const idx = await loadJSON("firm/index.json");
+    const c = idx[id];
+    if (c === undefined) return null;
+    const chunk = await loadJSON(`${freq === "quarterly" ? "firm_q" : "firm"}/chunk_${c}.json`);
+    return chunk[id] || null;
+  }
+  /** Firm record -> {period: {measure: value}} so firms and aggregates share one shape. */
+  function firmToPeriods(rec, freq = "annual") {
+    const out = {};
+    if (!rec) return out;
+    const keys = freq === "quarterly" ? rec.q : rec.years;
+    keys.forEach((p, i) => {
+      const row = {};
+      for (const m of MEASURE_KEYS) row[m] = rec[m] ? rec[m][i] : null;
+      out[String(p)] = row;
     });
+    return out;
   }
 
-  function setupChipInput(name, items, initialIds, lookupList, onChange, lazyFirm = false, multiSelect = false) {
-    const wrap     = document.getElementById(`${name}-wrap`);
-    const input    = document.getElementById(`filter-${name}-input`);
-    const dropdown = document.getElementById(`${name}-dropdown`);
-    if (!wrap || !input || !dropdown) return;
+  /* ---------- UI helpers ---------- */
 
-    let selected   = new Set(initialIds || []);
-    let allItems   = items;
-    let firmsLoaded = false;
+  /** Accessible combobox. getItems(query) -> [{id, label, sub}] (sync or async). */
+  function combobox({ input, list, getItems, onSelect, minChars = 1 }) {
+    const listId = list.id || "cb-" + Math.random().toString(36).slice(2);
+    list.id = listId;
+    list.setAttribute("role", "listbox");
+    input.setAttribute("role", "combobox");
+    input.setAttribute("aria-autocomplete", "list");
+    input.setAttribute("aria-expanded", "false");
+    input.setAttribute("aria-controls", listId);
+    input.setAttribute("autocomplete", "off");
+    let items = [], active = -1, token = 0;
 
-    function renderChips() {
-      wrap.querySelectorAll(".chip").forEach(c => c.remove());
-      const nameMap = {};
-      for (const it of allItems) nameMap[it.id] = it.label;
-      for (const id of selected) {
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.innerHTML = `${nameMap[id] || id} <button data-id="${id}">&times;</button>`;
-        wrap.insertBefore(chip, input);
+    const close = () => {
+      list.classList.remove("open"); input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant"); active = -1;
+    };
+    const highlight = (i) => {
+      const opts = list.querySelectorAll(".option");
+      opts.forEach((o) => o.classList.remove("active"));
+      active = i;
+      if (opts[i]) {
+        opts[i].classList.add("active");
+        input.setAttribute("aria-activedescendant", opts[i].id);
+        opts[i].scrollIntoView({ block: "nearest" });
       }
-      wrap.querySelectorAll(".chip button").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          selected.delete(btn.dataset.id);
-          renderChips(); updateURL(); onChange();
-        });
-      });
+    };
+    const choose = (i) => { const it = items[i]; if (!it) return; close(); onSelect(it); };
+
+    async function refresh() {
+      const query = input.value.trim();
+      if (query.length < minChars) { close(); return; }
+      const my = ++token;
+      const res = await getItems(query);
+      if (my !== token) return;
+      items = res || [];
+      list.innerHTML = items.length
+        ? items.map((it, i) => `<div class="option" role="option" id="${listId}-o${i}" data-i="${i}">
+            <span class="option-label">${esc(it.label)}</span>${it.sub ? `<span class="option-sub">${esc(it.sub)}</span>` : ""}</div>`).join("")
+        : `<div class="option-empty">No matches</div>`;
+      list.classList.add("open");
+      input.setAttribute("aria-expanded", "true");
+      active = -1;
     }
 
-    function updateURL() {
-      const obj = {}; obj[name] = Array.from(selected); setParams(obj);
-    }
-
-    function showDropdown(filter) {
-      const f = filter.toLowerCase();
-      const matches = allItems.filter(it => !selected.has(it.id) && it.label.toLowerCase().includes(f)).slice(0, 50);
-      dropdown.innerHTML = matches.map(m => `<div class="option" data-id="${m.id}">${m.label}</div>`).join("");
-      dropdown.classList.toggle("open", matches.length > 0 && f.length > 0);
-      dropdown.querySelectorAll(".option").forEach(opt => {
-        opt.addEventListener("click", () => {
-          if (!multiSelect) selected.clear();
-          selected.add(opt.dataset.id);
-          input.value = "";
-          dropdown.classList.remove("open");
-          renderChips(); updateURL(); onChange();
-        });
-      });
-    }
-
-    input.addEventListener("focus", async () => {
-      if (lazyFirm && !firmsLoaded) {
-        input.placeholder = "Loading firms…";
-        const firms = await getFirms();
-        allItems = firms.map(f => ({ id: f.id, label: `${f.name} (${f.id})` }));
-        firmsLoaded = true;
-        input.placeholder = "Search firms…";
-        renderChips();
-      }
-      if (input.value) showDropdown(input.value);
+    input.addEventListener("input", refresh);
+    input.addEventListener("focus", () => { if (input.value.trim().length >= minChars) refresh(); });
+    input.addEventListener("keydown", (e) => {
+      const n = items.length;
+      if (e.key === "ArrowDown") { e.preventDefault(); if (!list.classList.contains("open")) refresh(); else highlight((active + 1) % Math.max(n, 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); highlight((active - 1 + n) % Math.max(n, 1)); }
+      else if (e.key === "Enter") { if (list.classList.contains("open") && n) { e.preventDefault(); choose(active >= 0 ? active : 0); } }
+      else if (e.key === "Escape") { close(); }
     });
-    input.addEventListener("input", () => showDropdown(input.value));
-    document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) dropdown.classList.remove("open"); });
-
-    renderChips();
+    list.addEventListener("mousedown", (e) => {
+      const opt = e.target.closest(".option");
+      if (opt) { e.preventDefault(); choose(+opt.dataset.i); }
+    });
+    input.addEventListener("blur", () => setTimeout(close, 120));
+    return { close, refresh };
   }
 
-  // --- Data helpers ---
-  function filterYears(data, yearMin, yearMax) {
-    const result = {};
-    for (const [year, val] of Object.entries(data)) {
-      const y = +year;
-      if (y >= yearMin && y <= yearMax) result[year] = val;
+  /** Search helpers that feed combobox(). */
+  function matchScore(label, q) {
+    const l = label.toLowerCase();
+    if (l.startsWith(q)) return 0;
+    if (l.includes(" " + q)) return 1;
+    return l.includes(q) ? 2 : -1;
+  }
+  async function searchFirms(query, limit = 30) {
+    const firms = await getFirms();
+    await lookups();
+    const ql = query.toLowerCase();
+    const isId = /^\d+$/.test(ql);
+    const hits = [];
+    for (const f of firms) {
+      const s = isId ? (f.id.startsWith(ql) ? 0 : -1) : matchScore(f.name, ql);
+      if (s >= 0) hits.push([s, f]);
     }
-    return result;
+    hits.sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name));
+    return hits.slice(0, limit).map(([, f]) => ({
+      id: f.id, label: f.name,
+      sub: [countryName(f.country), industryShort(f.industry), `${f.first}–${f.last}`].filter(Boolean).join(" · "),
+    }));
+  }
+  async function searchCountries(query) {
+    const cs = await getCountries();
+    const ql = query.toLowerCase();
+    return cs.map((c) => [matchScore(`${c.name} (${c.code})`, ql), c]).filter((x) => x[0] >= 0)
+      .sort((a, b) => a[0] - b[0] || b[1].n_firms - a[1].n_firms)
+      .slice(0, 40).map(([, c]) => ({ id: c.code, label: c.name, sub: `${num(c.n_firms)} firms` }));
+  }
+  async function searchIndustries(query) {
+    const is = await getIndustries();
+    const ql = query.toLowerCase();
+    return is.map((i) => [matchScore(i.name, ql), i]).filter((x) => x[0] >= 0)
+      .sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name))
+      .slice(0, 48).map(([, i]) => ({ id: i.code, label: i.name, sub: `${num(i.n_firms)} firms` }));
   }
 
-  function applyScale(values, years, scale) {
-    if (scale === "level") return values;
-    if (scale === "index") {
-      const base = values[0];
-      if (!base || base === 0) return values;
-      return values.map(v => v === null ? null : (v / base) * 100);
-    }
-    if (scale === "yoy") {
-      return values.map((v, i) => {
-        if (i === 0 || v === null || values[i-1] === null) return null;
-        return v - values[i-1];
-      });
-    }
-    return values;
+  /** Two linked year inputs; clamps to range and swaps if reversed. */
+  function yearRange(container, { min, max, from, to, onChange, idPrefix = "yr" }) {
+    container.innerHTML = `
+      <div class="year-range">
+        <label class="sr-only" for="${idPrefix}-from">From year</label>
+        <input type="number" id="${idPrefix}-from" min="${min}" max="${max}" value="${from}" inputmode="numeric">
+        <span aria-hidden="true">to</span>
+        <label class="sr-only" for="${idPrefix}-to">To year</label>
+        <input type="number" id="${idPrefix}-to" min="${min}" max="${max}" value="${to}" inputmode="numeric">
+      </div>`;
+    const a = container.querySelector(`#${idPrefix}-from`);
+    const b = container.querySelector(`#${idPrefix}-to`);
+    const sync = () => {
+      let x = clamp(parseInt(a.value, 10) || min, min, max);
+      let y = clamp(parseInt(b.value, 10) || max, min, max);
+      if (x > y) [x, y] = [y, x];
+      a.value = x; b.value = y;
+      onChange(x, y);
+    };
+    a.addEventListener("change", sync);
+    b.addEventListener("change", sync);
+    return { get: () => [+a.value, +b.value], set: (x, y) => { a.value = x; b.value = y; } };
   }
 
-  function navLink(page, params = {}) {
-    const p = new URLSearchParams(params).toString();
-    return page + (p ? "?" + p : "");
+  /** Segmented control (radio group). options: [[value, label]] */
+  function segmented(container, { name, options, value, onChange, label }) {
+    container.innerHTML = `<div class="segmented" role="radiogroup" aria-label="${esc(label || name)}">
+      ${options.map(([v, l]) => `<label class="seg"><input type="radio" name="${name}" value="${esc(v)}" ${v === value ? "checked" : ""}><span>${esc(l)}</span></label>`).join("")}
+    </div>`;
+    container.querySelectorAll("input").forEach((r) => r.addEventListener("change", () => onChange(r.value)));
+    return {
+      set(v) { const r = container.querySelector(`input[value="${CSS.escape(v)}"]`); if (r) r.checked = true; },
+      setDisabled(v, dis) { const r = container.querySelector(`input[value="${CSS.escape(v)}"]`); if (r) { r.disabled = dis; r.closest(".seg").classList.toggle("disabled", dis); } },
+    };
   }
+
+  /** Loading state: hold the previous render, dim it, show a spinner after a short delay. */
+  function busy(el, on) {
+    if (!el) return;
+    if (on) {
+      el.classList.add("is-loading");
+      el._busyT = setTimeout(() => el.classList.add("show-spinner"), 250);
+    } else {
+      clearTimeout(el._busyT);
+      el.classList.remove("is-loading", "show-spinner");
+    }
+  }
+
+  /** Inline notice inside a container (replaces the previous one). */
+  function notice(container, html, kind = "info") {
+    if (!container) return;
+    container.innerHTML = html ? `<div class="notice notice-${kind}" role="status">${html}</div>` : "";
+  }
+
+  /** Featured-company card (sparkline vs all firms); p from featured.json. */
+  function firmCard(p, { ref, yMax }) {
+    const color = MEASURE_COLORS[p.dominant] || MEASURE_COLORS.social;
+    return `<a class="firm-card" href="${link("firm.html", { id: p.id })}"
+               aria-label="${esc(p.name)}, ${esc(countryName(p.country))}: peak in ${p.peak_year}, mostly ${esc(MEASURES[p.dominant] || "")}">
+      <div class="firm-card-head">
+        <span class="firm-card-name">${esc(p.name)}</span>
+        <span class="firm-card-ctry" title="${esc(countryName(p.country))}">${esc(p.country || "")}</span>
+      </div>
+      ${Charts.spark(p.social_3y, { color, ref, yMax, h: 58, fill: true })}
+      <div class="firm-card-foot">
+        <span class="tag"><span class="measure-dot" style="background:${color}"></span><span>${esc(MEASURES[p.dominant] || "–")}</span></span>
+        <span>Peak ${p.peak_year}</span>
+      </div>
+    </a>`;
+  }
+
+  /** Recently viewed firms (per-viewer convenience; storage may be unavailable). */
+  const RECENT_KEY = "use_recent_firms";
+  function recentFirms() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]").filter((x) => typeof x === "string"); } catch { return []; }
+  }
+  function rememberFirm(id) {
+    try {
+      const list = [String(id), ...recentFirms().filter((x) => x !== String(id))].slice(0, 8);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+    } catch { /* storage unavailable */ }
+  }
+
+  renderChrome();
 
   return {
-    MEASURES, MEASURE_KEYS, MEASURE_COLORS, STATS, SCALES,
-    loadJSON, getParams, setParams,
-    toast, showLoading, hideLoading,
-    updateSlicePill,
-    initNavbar, buildFilterPanel,
-    getCountries, getIndustries, getFirms, getMeta,
-    filterYears, applyScale, navLink, BASE_PATH,
+    SITE, MEASURES, MEASURE_KEYS, DOMAIN_KEYS, MEASURE_COLORS, STATS, STAT_KEYS, UNIT, EVENTS, BASE_PATH,
+    esc, num, fmt, clamp, periodYear,
+    loadJSON, param, paramInt, paramList, setParams, link,
+    copy, toast, openCite, initDrawer, busy, notice,
+    getMeta, getCountries, getIndustries, getFirms, getFirm, lookups, countryName, industryName, industryShort,
+    loadAgg, loadFirm, firmToPeriods,
+    combobox, searchFirms, searchCountries, searchIndustries, yearRange, segmented,
+    firmCard, recentFirms, rememberFirm,
   };
 })();
-
-document.addEventListener("DOMContentLoaded", () => App.initNavbar());

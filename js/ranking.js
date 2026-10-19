@@ -1,305 +1,304 @@
-/* ============ ranking.js ============ */
+/* ============ ranking.js — league tables ============ */
 (async () => {
-  const meta   = await App.getMeta();
-  const params = App.getParams();
+  const { MEASURES, MEASURE_KEYS, MEASURE_COLORS, esc, num } = App;
+  const meta = await App.getMeta();
+  await App.lookups();
 
-  const entitySel   = document.getElementById("ctrl-entity");
-  const measureSel  = document.getElementById("ctrl-measure");
-  const modeSel     = document.getElementById("ctrl-mode");
-  const yearSel     = document.getElementById("ctrl-year");
-  const periodStart = document.getElementById("ctrl-period-start");
-  const periodEnd   = document.getElementById("ctrl-period-end");
-  const directionSel = document.getElementById("ctrl-direction");
-  const topnInput   = document.getElementById("ctrl-topn");
-  const mincovInput = document.getElementById("ctrl-mincov");
-  const searchInput = document.getElementById("search-entity");
+  const TYPE_LABEL = { country: "Countries", industry: "Industries", firm: "Firms" };
+  const hasParam = (k) => App.param(k) !== null;
 
-  // Populate measures
-  App.MEASURE_KEYS.forEach(k => {
-    measureSel.innerHTML += `<option value="${k}" ${k === params.measure ? "selected" : ""}>${App.MEASURES[k]}</option>`;
-  });
+  let entity = ["country", "industry", "firm"].includes(App.param("entity_type")) ? App.param("entity_type") : "country";
+  const state = {
+    measure: MEASURES[App.param("measure")] ? App.param("measure") : "social",
+    mode: App.param("ranking_mode") || (entity === "firm" ? "period" : "single"),
+    year: App.clamp(App.paramInt("ranking_year", meta.year_max), meta.year_min, meta.year_max),
+    p0: App.clamp(App.paramInt("period_start", entity === "firm" ? 2015 : meta.year_min), meta.year_min, meta.year_max),
+    p1: App.clamp(App.paramInt("period_end", meta.year_max), meta.year_min, meta.year_max),
+    direction: App.param("direction") === "bottom" ? "bottom" : "top",
+    topN: App.clamp(App.paramInt("top_n", 25), 5, 500),
+    minFirms: hasParam("min_coverage") ? Math.max(0, App.paramInt("min_coverage", 10)) : 10,
+    minYears: hasParam("min_years") ? Math.max(1, App.paramInt("min_years", 5)) : 5,
+  };
+  if (state.mode !== "period") state.mode = "single";
+  if (state.p0 > state.p1) [state.p0, state.p1] = [state.p1, state.p0];
 
-  // Populate years
-  for (let y = meta.year_max; y >= meta.year_min; y--) {
-    yearSel.innerHTML += `<option value="${y}" ${y === (params.ranking_year || meta.year_max) ? "selected" : ""}>${y}</option>`;
-  }
+  let ranked = [];       // full sorted list after filters
+  let shown = 0;         // rows currently in the table
+  let highlightId = null;
 
-  entitySel.value    = params.entity_type    || "country";
-  modeSel.value      = params.ranking_mode   || "single";
-  directionSel.value = params.direction      || "top";
-  topnInput.value    = params.top_n          || 20;
-  mincovInput.value  = (params.min_coverage !== undefined && params.min_coverage !== 0) ? params.min_coverage : 10;
-  periodStart.value  = params.period_start   || meta.year_min;
-  periodEnd.value    = params.period_end     || meta.year_max;
-  periodStart.min = meta.year_min; periodStart.max = meta.year_max;
-  periodEnd.min   = meta.year_min; periodEnd.max   = meta.year_max;
-  searchInput.value  = params.search_entity  || "";
-
-  function toggleModeControls() {
-    const isSingle = modeSel.value === "single";
-    document.getElementById("year-controls").style.display   = isSingle ? "" : "none";
-    document.getElementById("period-controls").style.display = isSingle ? "none" : "";
-  }
-  toggleModeControls();
-  modeSel.addEventListener("change", () => { toggleModeControls(); updateAndRender(); });
-
-  let allSortedEntries = [];
-  let currentData      = [];
-
-  function updateStickyBar() {
-    const p     = App.getParams();
-    const topN  = +topnInput.value || 20;
-    const dir   = directionSel.value === "top" ? "Top" : "Bottom";
-    const etype = { country:"Countries", industry:"Industries", firm:"Firms" }[entitySel.value] || entitySel.value;
-    const mname = App.MEASURES[measureSel.value] || measureSel.value;
-    const isSingle = modeSel.value === "single";
-    const period = isSingle
-      ? String(yearSel.value)
-      : `${periodStart.value}–${periodEnd.value}`;
-
-    document.getElementById("rsb-direction").textContent = `${dir} ${topN}`;
-    document.getElementById("rsb-entity").textContent    = etype;
-    document.getElementById("rsb-measure").textContent   = mname;
-    document.getElementById("rsb-period").textContent    = period;
-    document.getElementById("rsb-minobs").textContent    = mincovInput.value;
-  }
-
-  function updateAndRender() {
+  function syncURL() {
     App.setParams({
-      entity_type:   entitySel.value,
-      measure:       measureSel.value,
-      ranking_mode:  modeSel.value,
-      ranking_year:  +yearSel.value,
-      direction:     directionSel.value,
-      top_n:         +topnInput.value,
-      min_coverage:  +mincovInput.value,
-      period_start:  +periodStart.value,
-      period_end:    +periodEnd.value,
-      search_entity: searchInput.value,
+      entity_type: entity, measure: state.measure, ranking_mode: state.mode,
+      ranking_year: state.mode === "single" ? state.year : null,
+      period_start: state.mode === "period" ? state.p0 : null, period_end: state.mode === "period" ? state.p1 : null,
+      direction: state.direction === "top" ? null : state.direction, top_n: state.topN === 25 ? null : state.topN,
+      min_coverage: entity !== "firm" ? state.minFirms : null,
+      min_years: entity === "firm" && state.mode === "period" ? state.minYears : null,
     });
-    render();
   }
 
-  [entitySel, measureSel, yearSel, directionSel].forEach(el => el.addEventListener("change", updateAndRender));
-  [topnInput, mincovInput, periodStart, periodEnd].forEach(el => el.addEventListener("change", updateAndRender));
-
-  // Search
-  searchInput.addEventListener("input", () => {
-    const query = searchInput.value.trim();
-    if (!query) { render(); return; }
-    renderWithSearch(query);
+  /* ---------- Controls ---------- */
+  App.segmented(document.getElementById("ctrl-entity"), {
+    name: "entity", label: "Entity", value: entity,
+    options: [["country", "Countries"], ["industry", "Industries"], ["firm", "Firms"]],
+    onChange: (v) => {
+      entity = v;
+      if (v === "firm" && !hasParam("ranking_mode")) { state.mode = "period"; modeCtrl.set("period"); if (!hasParam("period_start")) { state.p0 = 2015; periodRange.set(state.p0, state.p1); } }
+      syncControls(); render();
+    },
   });
+  const mSel = document.getElementById("ctrl-measure");
+  mSel.innerHTML = MEASURE_KEYS.map((k) => `<option value="${k}">${esc(MEASURES[k])}</option>`).join("");
+  mSel.value = state.measure;
+  mSel.onchange = () => { state.measure = mSel.value; render(); };
+  const modeCtrl = App.segmented(document.getElementById("ctrl-mode"), {
+    name: "mode", label: "Mode", value: state.mode, options: [["single", "Single year"], ["period", "Period average"]],
+    onChange: (v) => { state.mode = v; syncControls(); render(); },
+  });
+  const ySel = document.getElementById("ctrl-year");
+  for (let y = meta.year_max; y >= meta.year_min; y--) ySel.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+  ySel.value = state.year;
+  ySel.onchange = () => { state.year = +ySel.value; render(); };
+  const periodRange = App.yearRange(document.getElementById("period-range"), {
+    min: meta.year_min, max: meta.year_max, from: state.p0, to: state.p1, idPrefix: "per",
+    onChange: (a, b) => { state.p0 = a; state.p1 = b; render(); },
+  });
+  const dSel = document.getElementById("ctrl-direction");
+  dSel.value = state.direction;
+  dSel.onchange = () => { state.direction = dSel.value; render(); };
+  const nIn = document.getElementById("ctrl-topn");
+  nIn.value = state.topN;
+  nIn.onchange = () => { state.topN = App.clamp(parseInt(nIn.value, 10) || 25, 5, 500); nIn.value = state.topN; render(); };
+  const minIn = document.getElementById("ctrl-min");
+  minIn.onchange = () => {
+    const v = Math.max(0, parseInt(minIn.value, 10) || 0);
+    if (entity === "firm") state.minYears = Math.max(1, v); else state.minFirms = v;
+    syncControls(); render();
+  };
 
-  function renderWithSearch(query) {
-    const q     = query.toLowerCase();
-    const tbody = document.querySelector("#ranking-table tbody");
-
-    const matchIdx = allSortedEntries.findIndex(e =>
-      (e.name || e.id).toLowerCase().includes(q)
-    );
-
-    if (matchIdx === -1) {
-      tbody.querySelectorAll("tr").forEach(r => r.classList.remove("highlight"));
-      return;
+  function syncControls() {
+    const period = state.mode === "period";
+    document.getElementById("year-ctrl").hidden = period;
+    document.getElementById("period-ctrl").hidden = !period;
+    const minCtrl = document.getElementById("min-ctrl");
+    if (entity === "firm") {
+      minCtrl.hidden = !period;
+      document.getElementById("min-label").textContent = "Min years";
+      minIn.min = 1; minIn.max = state.p1 - state.p0 + 1; minIn.value = state.minYears;
+      minCtrl.title = "Only firms with data in at least this many years of the period";
+    } else {
+      minCtrl.hidden = false;
+      document.getElementById("min-label").textContent = period ? "Min firms / yr" : "Min firms";
+      minIn.min = 0; minIn.removeAttribute("max"); minIn.value = state.minFirms;
+      minCtrl.title = "Hide countries or industries with fewer firms (average per year in period mode)";
     }
+  }
 
-    const topN = +topnInput.value || 20;
-    if (matchIdx < topN) {
-      // Already in table — just highlight row
-      const rows = tbody.querySelectorAll("tr");
-      rows.forEach(r => r.classList.remove("highlight"));
-      if (rows[matchIdx]) {
-        rows[matchIdx].classList.add("highlight");
-        rows[matchIdx].scrollIntoView({ behavior: "smooth", block: "center" });
+  const ctrlBtn = document.getElementById("controls-toggle");
+  ctrlBtn.onclick = () => {
+    const box = document.getElementById("rank-controls");
+    const open = box.classList.toggle("open");
+    ctrlBtn.setAttribute("aria-expanded", String(open));
+  };
+
+  /* ---------- Data ---------- */
+  async function loadEntries() {
+    const years = state.mode === "single" ? [state.year] : Array.from({ length: state.p1 - state.p0 + 1 }, (_, i) => state.p0 + i);
+    if (entity === "firm") {
+      const [lists] = await Promise.all([Promise.all(years.map((y) => App.loadJSON(`ranking/firm/${state.measure}/${y}.json`))), App.getFirms()]);
+      const acc = new Map();
+      lists.forEach((rows) => rows.forEach(([id, v]) => {
+        if (v == null) return;
+        const a = acc.get(id) || { sum: 0, k: 0 };
+        a.sum += v; a.k++; acc.set(id, a);
+      }));
+      const out = [];
+      for (const [id, a] of acc) {
+        if (state.mode === "period" && a.k < state.minYears) continue;
+        out.push({ id, val: a.sum / a.k, years: a.k });
       }
+      return out;
+    }
+    const file = await App.loadJSON(`ranking/${state.measure}_${entity}.json`);
+    const acc = new Map();
+    years.forEach((y) => (file.years[String(y)] || []).forEach(([id, v, n, nf]) => {
+      const a = acc.get(id) || { sum: 0, k: 0, nf: 0 };
+      a.sum += v; a.k++; a.nf += nf; acc.set(id, a);
+    }));
+    const out = [];
+    for (const [id, a] of acc) {
+      const nfirm = a.nf / a.k;
+      if (nfirm < state.minFirms) continue;
+      out.push({ id, val: a.sum / a.k, years: a.k, nfirm });
+    }
+    return out;
+  }
+
+  let firmName = null;
+  const nameOf = (e) => {
+    if (entity === "country") return App.countryName(e.id);
+    if (entity === "industry") return App.industryName(e.id);
+    return (firmName && firmName.get(e.id)) || `Firm ${e.id}`;
+  };
+
+  /* ---------- Render ---------- */
+  let token = 0;
+  async function render() {
+    syncURL();
+    const my = ++token;
+    const wrap = document.getElementById("ranking-wrap");
+    App.busy(wrap, true);
+    try {
+      const entries = await loadEntries();
+      if (my !== token) return;
+      if (entity === "firm" && !firmName) firmName = new Map((await App.getFirms()).map((f) => [f.id, f.name]));
+      const dir = state.direction === "top" ? -1 : 1;
+      entries.forEach((e) => { e.name = nameOf(e); });
+      entries.sort((a, b) => dir * (a.val - b.val) || a.name.localeCompare(b.name));
+      // percentile = share of ranked entities with a lower value (ties share the same percentile)
+      const asc = entries.map((e) => e.val).sort((a, b) => a - b);
+      const below = (v) => { let lo = 0, hi = asc.length; while (lo < hi) { const m = (lo + hi) >> 1; if (asc[m] < v) lo = m + 1; else hi = m; } return lo; };
+      entries.forEach((e) => { e.pct = asc.length > 1 ? App.clamp(Math.floor((below(e.val) / (asc.length - 1)) * 100), 1, 99) : 99; });
+      ranked = entries;
+      shown = Math.min(state.topN, ranked.length);
+      highlightId = null;
+      await drawTable();
+    } catch (e) {
+      console.error(e); App.toast("Could not load ranking: " + e.message);
+    }
+    if (my === token) App.busy(wrap, false);
+  }
+
+  const ord = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+
+  async function drawTable() {
+    const isFirm = entity === "firm", period = state.mode === "period";
+    const periodLabel = period ? `${state.p0}–${state.p1} average` : String(state.year);
+    document.getElementById("ranking-summary").innerHTML = `
+      <span>${state.direction === "top" ? "Highest" : "Lowest"}</span>
+      <span class="tag">${TYPE_LABEL[entity]}</span><span class="tag">${esc(MEASURES[state.measure])}</span><span class="tag">${periodLabel}</span>
+      <span>${num(ranked.length)} ranked${isFirm ? (period ? ` · ≥ ${state.minYears} years of data` : "") : ` · ≥ ${state.minFirms} firms${period ? " per year" : ""}`}</span>`;
+    document.getElementById("ranking-head").innerHTML = `<tr>
+      <th scope="col" class="num">#</th><th scope="col">${isFirm ? "Firm" : TYPE_LABEL[entity].replace(/ies$/, "y").replace(/s$/, "")}</th>
+      ${isFirm ? '<th scope="col" class="col-sub">Country</th><th scope="col" class="col-sub">Industry</th>' : ""}
+      <th scope="col">Exposure <span class="muted" style="text-transform:none;letter-spacing:0">(per 1,000 sentences)</span></th>
+      <th scope="col" class="num">Percentile</th>
+      ${isFirm ? (period ? '<th scope="col" class="num">Years</th>' : "") : `<th scope="col" class="num">Firms${period ? " / yr" : ""}</th>`}
+    </tr>`;
+    const tbody = document.getElementById("ranking-body");
+    if (!ranked.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">No entries match these filters. Try lowering the minimum${isFirm ? " years" : " firms"}.</td></tr>`;
+      document.getElementById("ranking-more").innerHTML = "";
       return;
     }
-
-    // Extend table from rank 1 to searched entity
-    const entriesToShow = allSortedEntries.slice(0, matchIdx + 1);
-    tbody.innerHTML = entriesToShow.map((e, i) => {
-      const isMatch = i === matchIdx;
-      return `<tr class="${isMatch ? "highlight" : ""}">
-        <td>${i + 1}</td>
-        <td>${e.name || e.id}</td>
-        <td>${e.val.toFixed(4)}</td>
-        <td>${e.n.toLocaleString()}</td>
-        <td>${e.nfirm.toLocaleString()}</td>
+    const firmMap = isFirm ? new Map((await App.getFirms()).map((f) => [f.id, f])) : null;
+    const rows = ranked.slice(0, shown);
+    const maxV = Math.max(...rows.map((r) => r.val), 1e-9);
+    const color = MEASURE_COLORS[state.measure];
+    tbody.innerHTML = rows.map((e, i) => {
+      const f = firmMap && firmMap.get(e.id);
+      const href = isFirm ? App.link("firm.html", { id: e.id }) : App.link("explore.html", { [entity]: e.id, measures: state.measure });
+      return `<tr data-id="${esc(e.id)}"${e.id === highlightId ? ' class="highlight"' : ""}>
+        <td class="rank">${i + 1}</td>
+        <td class="name"><a href="${href}">${esc(e.name)}</a>${isFirm && f ? `<span class="name-sub">${esc(f.country || "–")} · ${esc(App.industryShort(f.industry))}</span>` : ""}</td>
+        ${isFirm ? `<td class="sub col-sub">${esc(f ? App.countryName(f.country) : "–")}</td><td class="sub col-sub" title="${esc(f ? App.industryName(f.industry) : "")}">${esc(f ? App.industryShort(f.industry) : "–")}</td>` : ""}
+        <td><div class="valbar"><span class="bar"><i style="width:${(e.val / maxV) * 100}%;background:${color}"></i></span><span class="v">${e.val.toFixed(2)}</span></div></td>
+        <td class="num">${ord(e.pct)}</td>
+        ${isFirm ? (period ? `<td class="num">${e.years}</td>` : "") : `<td class="num">${num(Math.round(e.nfirm))}</td>`}
       </tr>`;
     }).join("");
-
-    const highlighted = tbody.querySelector("tr.highlight");
-    if (highlighted) highlighted.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    currentData = entriesToShow;
+    const more = document.getElementById("ranking-more");
+    more.innerHTML = shown < ranked.length
+      ? `Showing ${num(shown)} of ${num(ranked.length)} · <button type="button" class="link-btn" id="show-more">Show ${Math.min(25, ranked.length - shown)} more</button>`
+      : `Showing all ${num(ranked.length)}`;
+    const btn = document.getElementById("show-more");
+    if (btn) btn.onclick = () => { shown = Math.min(ranked.length, shown + 25); drawTable(); };
+    document.getElementById("ranking-caption").textContent = isFirm
+      ? `Firm exposure is the firm's annual value${period ? ", averaged over the years with data in the period" : ""}. Percentile is relative to all ranked firms.`
+      : `Country and industry values are the mean across their firms${period ? ", averaged over the years in the period" : ""}. Percentile is relative to all ranked ${TYPE_LABEL[entity].toLowerCase()}.`;
   }
 
-  async function render() {
-    const p       = App.getParams();
-    const measure = p.measure     || "social";
-    const entity  = p.entity_type || "country";
-    const mode    = p.ranking_mode || "single";
-    const direction = p.direction || "top";
-    const topN    = p.top_n || 20;
-    const minCov  = +mincovInput.value || 0;
-
-    try {
-      const rankData = await App.loadJSON(`ranking/${measure}_${entity}.json`);
-
-      let entries;
-      if (mode === "single") {
-        const year = String(p.ranking_year || meta.year_max);
-        entries = rankData.by_year[year] || [];
-      } else {
-        const pStart = p.period_start || meta.year_min;
-        const pEnd   = p.period_end   || meta.year_max;
-        const entityMap = new Map();
-        for (let y = pStart; y <= pEnd; y++) {
-          const yearData = rankData.by_year[String(y)] || [];
-          yearData.forEach(e => {
-            if (!entityMap.has(e.id)) {
-              entityMap.set(e.id, { id:e.id, name:e.name, valSum:0, valCount:0, n:0, nfirm:0 });
-            }
-            const rec = entityMap.get(e.id);
-            rec.valSum += e.val; rec.valCount++;
-            rec.n += e.n; rec.nfirm = Math.max(rec.nfirm, e.nfirm);
-          });
-        }
-        entries = Array.from(entityMap.values()).map(rec => ({
-          id:rec.id, name:rec.name,
-          val: rec.valSum / rec.valCount,
-          n:rec.n, nfirm:rec.nfirm,
-        }));
+  /* ---------- Search within the ranking ---------- */
+  const sIn = document.getElementById("search-entity");
+  App.combobox({
+    input: sIn, list: document.getElementById("search-list"),
+    getItems: (q) => {
+      const ql = q.toLowerCase();
+      const out = [];
+      for (let i = 0; i < ranked.length && out.length < 30; i++) {
+        const e = ranked[i];
+        if (e.name.toLowerCase().includes(ql) || e.id.toLowerCase() === ql) out.push({ id: e.id, label: e.name, sub: `Rank ${num(i + 1)} of ${num(ranked.length)} · ${e.val.toFixed(2)}` });
       }
+      return out;
+    },
+    onSelect: async (it) => {
+      const idx = ranked.findIndex((e) => e.id === it.id);
+      if (idx < 0) return;
+      highlightId = it.id;
+      if (idx >= shown) shown = idx + 1;
+      await drawTable();
+      const row = document.querySelector(`#ranking-body tr[data-id="${CSS.escape(it.id)}"]`);
+      if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+      sIn.value = it.label;
+    },
+  });
 
-      entries = entries.filter(e => e.n >= minCov);
-      if (direction === "top") entries.sort((a,b) => b.val - a.val);
-      else                      entries.sort((a,b) => a.val - b.val);
-
-      allSortedEntries = entries;
-      const displayed  = entries.slice(0, topN);
-      currentData      = displayed;
-
-      updateStickyBar();
-
-      const tbody = document.querySelector("#ranking-table tbody");
-      if (displayed.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">
-          No data matches the current filters.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = displayed.map((e, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${e.name || e.id}</td>
-          <td>${e.val.toFixed(4)}</td>
-          <td>${e.n.toLocaleString()}</td>
-          <td>${e.nfirm.toLocaleString()}</td>
-        </tr>`).join("");
-
-      if (searchInput.value.trim()) {
-        renderWithSearch(searchInput.value.trim());
-      }
-
-    } catch(e) {
-      console.error(e); App.toast("Error loading ranking: " + e.message);
-    }
-  }
-
-  // CSV export
-  document.getElementById("btn-export-csv").addEventListener("click", () => {
-    if (currentData.length === 0) { App.toast("No data to export"); return; }
-    const headers = ["Rank","ID","Name","Value","Observations","Firms"];
-    const rows    = currentData.map((e, i) => [i+1, e.id, `"${e.name || e.id}"`, e.val, e.n, e.nfirm]);
-    const csv     = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob    = new Blob([csv], { type:"text/csv" });
-    const url     = URL.createObjectURL(blob);
-    const a       = document.createElement("a");
-    a.href = url; a.download = `ranking_${measureSel.value}_${entitySel.value}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+  /* ---------- Exports ---------- */
+  document.getElementById("btn-csv").onclick = async () => {
+    const rows = ranked.slice(0, shown);
+    if (!rows.length) { App.toast("Nothing to export"); return; }
+    const isFirm = entity === "firm";
+    const firmMap = isFirm ? new Map((await App.getFirms()).map((f) => [f.id, f])) : null;
+    const head = ["rank", "id", "name", ...(isFirm ? ["country", "industry"] : []), "value", "percentile", isFirm ? "years" : "firms"];
+    const q = (s) => `"${String(s).replace(/"/g, '""')}"`;
+    const lines = rows.map((e, i) => {
+      const f = firmMap && firmMap.get(e.id);
+      return [i + 1, e.id, q(e.name), ...(isFirm ? [f ? f.country : "", q(f ? App.industryShort(f.industry) : "")] : []),
+        e.val.toFixed(4), e.pct, isFirm ? e.years : e.nfirm.toFixed(1)].join(",");
+    });
+    const blob = new Blob([[head.join(","), ...lines].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `ranking_${state.measure}_${entity}.csv`; a.click();
+    URL.revokeObjectURL(a.href);
     App.toast("CSV downloaded");
-  });
+  };
 
-  // PNG export — render visible table rows as canvas image
-  document.getElementById("btn-export-img").addEventListener("click", () => {
-    const table = document.getElementById("ranking-table");
-    if (!table || currentData.length === 0) { App.toast("No data to export"); return; }
-
-    const rows = currentData.length;
-    const cols = 5;
-    const rowH = 30, headerH = 36, colWidths = [50, 260, 90, 90, 80];
-    const totalW = colWidths.reduce((a,b) => a+b, 0);
-    const totalH = headerH + rows * rowH + 20;
-
-    const canvas = document.createElement("canvas");
-    canvas.width  = totalW + 40;
-    canvas.height = totalH + 40;
-    const ctx = canvas.getContext("2d");
-
-    // Background
-    ctx.fillStyle = "#faf9f5";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Title
-    ctx.fillStyle = "#141413";
-    ctx.font = "bold 13px Poppins, Arial, sans-serif";
-    ctx.fillText(
-      `${App.MEASURES[measureSel.value]} — ${entitySel.value}s ranking`,
-      20, 26
-    );
-
-    // Header row
-    const headers = ["#","Name","Value","Obs","Firms"];
-    let x = 20;
-    ctx.fillStyle = "#e8e6dc";
-    ctx.fillRect(20, 36, totalW, headerH);
-    ctx.fillStyle = "#b0aea5";
-    ctx.font = "bold 11px Poppins, Arial, sans-serif";
-    headers.forEach((h, i) => {
-      ctx.fillText(h, x + 6, 36 + headerH / 2 + 4);
-      x += colWidths[i];
+  document.getElementById("btn-png").onclick = () => {
+    const rows = ranked.slice(0, Math.min(shown, 60));
+    if (!rows.length) { App.toast("Nothing to export"); return; }
+    const scale = 2, W = 760, rowH = 26, top = 78;
+    const H = top + rows.length * rowH + 40;
+    const c = document.createElement("canvas");
+    c.width = W * scale; c.height = H * scale;
+    const ctx = c.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+    const F = Charts.FONT;
+    ctx.fillStyle = Charts.INK; ctx.font = `600 16px ${F}`;
+    ctx.fillText(`${MEASURES[state.measure]}: ${state.direction === "top" ? "highest" : "lowest"} ${TYPE_LABEL[entity].toLowerCase()}`, 24, 32);
+    ctx.fillStyle = Charts.MUTED; ctx.font = `400 12px ${F}`;
+    ctx.fillText(`${state.mode === "period" ? `${state.p0}–${state.p1} average` : state.year} · sentences per 1,000 · ${App.SITE.shortCite}`, 24, 52);
+    const maxV = Math.max(...rows.map((r) => r.val), 1e-9);
+    rows.forEach((e, i) => {
+      const y = top + i * rowH;
+      if (i % 2 === 0) { ctx.fillStyle = "#faf9f5"; ctx.fillRect(16, y - 17, W - 32, rowH); }
+      ctx.fillStyle = Charts.MUTED; ctx.font = `500 12px ${F}`; ctx.textAlign = "right"; ctx.fillText(String(i + 1), 48, y);
+      ctx.textAlign = "left"; ctx.fillStyle = Charts.INK; ctx.font = `500 12px ${F}`;
+      let name = e.name; while (ctx.measureText(name).width > 330 && name.length > 4) name = name.slice(0, -2);
+      ctx.fillText(name === e.name ? name : name + "…", 60, y);
+      ctx.fillStyle = "#efeee8"; ctx.fillRect(410, y - 9, 260, 8);
+      ctx.fillStyle = MEASURE_COLORS[state.measure]; ctx.fillRect(410, y - 9, (e.val / maxV) * 260, 8);
+      ctx.fillStyle = Charts.INK; ctx.font = `600 12px ${F}`; ctx.textAlign = "right"; ctx.fillText(e.val.toFixed(2), W - 24, y);
+      ctx.textAlign = "left";
     });
-
-    // Data rows
-    currentData.forEach((e, rowIdx) => {
-      const y = 36 + headerH + rowIdx * rowH;
-      ctx.fillStyle = rowIdx % 2 === 0 ? "#ffffff" : "#faf9f5";
-      ctx.fillRect(20, y, totalW, rowH);
-
-      const vals = [rowIdx+1, e.name||e.id, e.val.toFixed(4), e.n.toLocaleString(), e.nfirm.toLocaleString()];
-      ctx.fillStyle = "#141413";
-      ctx.font = "12px Lora, Georgia, serif";
-      x = 20;
-      vals.forEach((v, i) => {
-        ctx.fillText(String(v).slice(0, i===1 ? 32 : 20), x + 6, y + rowH/2 + 4);
-        x += colWidths[i];
-      });
-    });
-
-    // Grid lines
-    ctx.strokeStyle = "#e8e6dc";
-    ctx.lineWidth   = 0.5;
-    let lx = 20;
-    colWidths.forEach(w => {
-      lx += w;
-      ctx.beginPath();
-      ctx.moveTo(lx, 36);
-      ctx.lineTo(lx, 36 + headerH + rows * rowH);
-      ctx.stroke();
-    });
-
-    const url = canvas.toDataURL("image/png");
-    const a   = document.createElement("a");
-    a.href = url; a.download = `ranking_${measureSel.value}_${entitySel.value}.png`;
-    a.click();
+    ctx.fillStyle = Charts.MUTED; ctx.font = `400 10.5px ${F}`;
+    ctx.fillText(`Source: ${App.SITE.shortCite}, "Unpacking Social Exposure," SSRN 6770779 · ${meta.data_version}`, 24, H - 14);
+    const a = document.createElement("a");
+    a.href = c.toDataURL("image/png"); a.download = `ranking_${state.measure}_${entity}.png`; a.click();
     App.toast("PNG downloaded");
-  });
+  };
+  document.getElementById("btn-link").onclick = () => App.copy(window.location.href, "Link copied");
 
-  // Copy link
-  document.getElementById("btn-copy-link").addEventListener("click", () => {
-    navigator.clipboard.writeText(window.location.href).then(() => App.toast("Link copied!"));
-  });
-
+  syncControls();
   render();
 })();

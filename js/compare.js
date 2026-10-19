@@ -1,261 +1,244 @@
-/* ============ compare.js ============ */
+/* ============ compare.js — several countries / industries / firms on one measure ============ */
 (async () => {
-  const meta   = await App.getMeta();
-  const params = App.getParams();
+  const { MEASURES, MEASURE_KEYS, STATS, esc } = App;
+  const meta = await App.getMeta();
+  await App.lookups();
 
-  // Populate controls
-  const measureSel = document.getElementById("compare-measure");
-  App.MEASURE_KEYS.forEach(k => {
-    measureSel.innerHTML += `<option value="${k}" ${k === params.measure ? "selected" : ""}>${App.MEASURES[k]}</option>`;
+  /* Entity colours: validated categorical order; an entity keeps its slot while others come and go */
+  const PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"];
+  const MAX = PALETTE.length;
+  const TYPE_LABEL = { country: "Countries", industry: "Industries", firm: "Firms" };
+  const PRESETS = {
+    country: [["Largest markets", ["US", "GB", "CA", "JP", "CN", "DE"]], ["Europe", ["GB", "DE", "FR", "NL", "SE", "CH"]],
+              ["Emerging markets", ["CN", "IN", "BR", "ZA", "MX"]]],
+    industry: [["Finance vs energy", ["4", "26", "32", "47"]], ["Consumer", ["37", "20", "12", "29"]],
+               ["Health and tech", ["16", "24", "9", "11"]]],
+    firm: [["Big Tech", ["1690", "12141", "64768", "160329"]], ["Global consumer brands", ["7906", "221244", "245663", "25434"]],
+           ["Energy majors", ["4503", "24625", "2410", "222111"]]],
+  };
+
+  let type = ["country", "industry", "firm"].includes(App.param("entity_type")) ? App.param("entity_type") : "country";
+  const state = {
+    measure: MEASURES[App.param("measure")] ? App.param("measure") : "social",
+    stat: STATS[App.param("stat")] ? App.param("stat") : "mean",
+    freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
+    scale: App.param("scale") === "yoy" ? "yoy" : "level",
+    events: App.param("events") !== "0",
+    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, meta.year_max),
+    ymax: App.clamp(App.paramInt("year_max", meta.year_max), meta.year_min, meta.year_max),
+  };
+  if (state.ymin > state.ymax) [state.ymin, state.ymax] = [state.ymax, state.ymin];
+  let slots = new Map(); // id -> palette index
+
+  function loadSelection(t) {
+    slots = new Map();
+    const ids = App.paramList(t);
+    ids.slice(0, MAX).forEach((id, i) => slots.set(id, i));
+    if (ids.length > MAX) App.notice(document.getElementById("notice"), `Compare shows up to ${MAX} entities; the first ${MAX} are shown.`, "warn");
+  }
+  const freeSlot = () => { for (let i = 0; i < MAX; i++) if (![...slots.values()].includes(i)) return i; return -1; };
+
+  function syncURL() {
+    App.setParams({
+      entity_type: type, country: null, industry: null, firm: null, [type]: [...slots.keys()],
+      measure: state.measure, stat: state.stat === "mean" ? null : state.stat,
+      freq: state.freq === "annual" ? null : state.freq, scale: state.scale === "level" ? null : state.scale,
+      events: state.events ? null : "0",
+      year_min: state.ymin === meta.year_min ? null : state.ymin, year_max: state.ymax === meta.year_max ? null : state.ymax,
+    });
+  }
+
+  async function nameOf(id) {
+    if (type === "country") return App.countryName(id);
+    if (type === "industry") return App.industryName(id);
+    const f = await App.getFirm(id); return f ? f.name : `Firm ${id}`;
+  }
+
+  /* ---------- Sidebar ---------- */
+  App.segmented(document.getElementById("type-ctrl"), {
+    name: "etype", label: "Entity type", value: type,
+    options: [["country", "Countries"], ["industry", "Industries"], ["firm", "Firms"]],
+    onChange: (v) => { type = v; slots = new Map(); renderChips(); update(); },
+  });
+  document.querySelector("#type-ctrl .segmented").style.gridTemplateColumns = "repeat(3, 1fr)";
+
+  const input = document.getElementById("entity-input");
+  App.combobox({
+    input, list: document.getElementById("entity-list"),
+    getItems: async (q) => {
+      const items = type === "country" ? await App.searchCountries(q) : type === "industry" ? await App.searchIndustries(q) : await App.searchFirms(q);
+      return items.filter((it) => !slots.has(it.id));
+    },
+    onSelect: (it) => {
+      const s = freeSlot();
+      if (s < 0) { App.toast(`Up to ${MAX} at a time — remove one first`); return; }
+      slots.set(it.id, s); input.value = ""; renderChips(); update();
+    },
   });
 
-  const entityType = document.getElementById("entity-type");
-  entityType.value = params.entity_type || "country";
+  async function renderChips() {
+    document.getElementById("entity-label").textContent = TYPE_LABEL[type];
+    input.placeholder = type === "firm" ? "Search firms by name or GVKEY…" : `Search ${TYPE_LABEL[type].toLowerCase()}…`;
+    const box = document.getElementById("entity-chips");
+    const parts = await Promise.all([...slots.entries()].map(async ([id, s]) => {
+      const n = await nameOf(id);
+      return `<span class="chip"><span class="chip-swatch" style="background:${PALETTE[s]}"></span>
+        <span class="chip-text" title="${esc(n)}">${esc(n)}</span>
+        <button type="button" data-id="${esc(id)}" aria-label="Remove ${esc(n)}">&times;</button></span>`;
+    }));
+    box.innerHTML = parts.join("");
+    box.querySelectorAll("button").forEach((b) => b.onclick = () => { slots.delete(b.dataset.id); renderChips(); update(); });
+  }
 
-  const yminInput = document.getElementById("filter-ymin");
-  const ymaxInput = document.getElementById("filter-ymax");
-  yminInput.value = params.year_min || meta.year_min;
-  ymaxInput.value = params.year_max || meta.year_max;
-  yminInput.min = meta.year_min; yminInput.max = meta.year_max;
-  ymaxInput.min = meta.year_min; ymaxInput.max = meta.year_max;
+  const mSel = document.getElementById("ctrl-measure");
+  mSel.innerHTML = MEASURE_KEYS.map((k) => `<option value="${k}">${esc(MEASURES[k])}</option>`).join("");
+  mSel.value = state.measure;
+  mSel.onchange = () => { state.measure = mSel.value; update(); };
+  const sSel = document.getElementById("ctrl-stat");
+  sSel.innerHTML = Object.entries(STATS).map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join("");
+  sSel.value = state.stat;
+  sSel.onchange = () => { state.stat = sSel.value; update(); };
+  App.yearRange(document.getElementById("year-ctrl"), {
+    min: meta.year_min, max: meta.year_max, from: state.ymin, to: state.ymax,
+    onChange: (a, b) => { state.ymin = a; state.ymax = b; update(); },
+  });
+  document.getElementById("copy-link").onclick = () => App.copy(window.location.href, "Link copied");
+  App.initDrawer("drawer-toggle", "sidebar");
 
-  // Entity chip input (multi-select)
-  const wrap     = document.getElementById("entity-wrap");
-  const input    = document.getElementById("entity-input");
-  const dropdown = document.getElementById("entity-dropdown");
+  App.segmented(document.getElementById("ctrl-freq"), {
+    name: "freq", label: "Frequency", value: state.freq, options: [["annual", "Annual"], ["quarterly", "Quarterly"]],
+    onChange: (v) => { state.freq = v; update(); },
+  });
+  const scaleSel = document.getElementById("ctrl-scale");
+  scaleSel.value = state.scale;
+  scaleSel.onchange = () => { state.scale = scaleSel.value; update(); };
+  const ev = document.getElementById("ctrl-events");
+  ev.checked = state.events;
+  ev.onchange = () => { state.events = ev.checked; update(); };
 
-  let allItems    = [];
-  let selected    = new Set();
-  let entityLookup = {};
-
-  async function loadEntityOptions() {
-    const type = entityType.value;
-    if (type === "country") {
-      const countries = await App.getCountries();
-      allItems = countries.map(c => ({ id: c.code, label: `${c.name} (${c.code})` }));
-      selected = new Set(params.country || []);
-    } else if (type === "industry") {
-      const industries = await App.getIndustries();
-      allItems = industries.map(i => ({ id: i.code, label: `${i.name} (${i.code})` }));
-      selected = new Set(params.industry || []);
-    } else {
-      const firms = await App.getFirms();
-      allItems = firms.map(f => ({ id: f.id, label: `${f.name} (${f.id})` }));
-      selected = new Set(params.firm || []);
+  /* ---------- Data ---------- */
+  async function series(id) {
+    if (type === "firm") {
+      const rec = await App.loadFirm(id, state.freq);
+      const map = App.firmToPeriods(rec, state.freq);
+      return { value: (p) => (map[p] ? map[p][state.measure] : null), periods: Object.keys(map), nfirm: () => null };
     }
-    entityLookup = {};
-    allItems.forEach(it => entityLookup[it.id] = it.label);
-    renderChips();
-  }
-
-  function renderChips() {
-    wrap.querySelectorAll(".chip").forEach(c => c.remove());
-    for (const id of selected) {
-      const chip = document.createElement("span");
-      chip.className = "chip";
-      chip.innerHTML = `${entityLookup[id] || id} <button data-id="${id}">&times;</button>`;
-      wrap.insertBefore(chip, input);
-    }
-    wrap.querySelectorAll(".chip button").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        selected.delete(btn.dataset.id);
-        renderChips(); updateAndRender();
-      });
-    });
-  }
-
-  function showDropdown(filter) {
-    const f = filter.toLowerCase();
-    const matches = allItems
-      .filter(it => !selected.has(it.id) && it.label.toLowerCase().includes(f))
-      .slice(0, 50);
-    dropdown.innerHTML = matches.map(m =>
-      `<div class="option" data-id="${m.id}">${m.label}</div>`).join("");
-    dropdown.classList.toggle("open", matches.length > 0 && f.length > 0);
-    dropdown.querySelectorAll(".option").forEach(opt => {
-      opt.addEventListener("click", () => {
-        selected.add(opt.dataset.id);
-        input.value = "";
-        dropdown.classList.remove("open");
-        renderChips(); updateAndRender();
-      });
-    });
-  }
-
-  input.addEventListener("input", () => showDropdown(input.value));
-  input.addEventListener("focus", () => { if (input.value) showDropdown(input.value); });
-  document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) dropdown.classList.remove("open"); });
-
-  function updateAndRender() {
-    const type = entityType.value;
-    const p = {
-      entity_type: type,
-      measure:     measureSel.value,
-      year_min:    +yminInput.value,
-      year_max:    +ymaxInput.value,
+    let data = {};
+    try { data = await App.loadAgg(type, id, state.freq); } catch { data = {}; }
+    return {
+      value: (p) => (data[p] && data[p][state.measure] ? data[p][state.measure][state.stat] : null),
+      periods: Object.keys(data),
+      nfirm: (p) => (data[p] && data[p][state.measure] ? data[p][state.measure].nfirm : null),
     };
-    p.country = []; p.industry = []; p.firm = [];
-    p[type] = Array.from(selected);
-    App.setParams(p);
-    render();
   }
 
-  [measureSel, yminInput, ymaxInput].forEach(el => el.addEventListener("change", updateAndRender));
-  entityType.addEventListener("change", () => {
-    selected.clear();
-    loadEntityOptions().then(updateAndRender);
-  });
+  /* ---------- Render ---------- */
+  const body = document.getElementById("chart-body");
+  let token = 0;
 
-  document.getElementById("filter-clear").addEventListener("click", () => { window.location.search = ""; });
-  document.getElementById("filter-copy-link").addEventListener("click", () => {
-    navigator.clipboard.writeText(window.location.href).then(() => App.toast("Link copied!"));
-  });
+  async function update() {
+    syncURL();
+    const isFirm = type === "firm";
+    sSel.disabled = isFirm;
+    sSel.title = isFirm ? "A single firm has one value per period" : "";
+    const stat = isFirm ? "mean" : state.stat;
+    const pct = !isFirm && STATS[stat].pct;
+    const statLabel = isFirm ? "Firm value" : STATS[stat].label;
+    document.getElementById("chart-title").textContent = `${MEASURES[state.measure]} · ${TYPE_LABEL[type]}`;
+    document.getElementById("chart-sub").textContent =
+      `${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq}, ${state.ymin}–${state.ymax}`;
+    document.getElementById("chart-caption").textContent = isFirm
+      ? "Firm-level exposure: sentences on the topic per 1,000 sentences of each firm's earnings calls."
+      : `${statLabel} across the firms in each ${type === "country" ? "country (by headquarters)" : "industry (Fama-French 48)"}; ` +
+        `${pct ? "share of firms with at least one sentence on the topic" : "sentences per 1,000"}. Hover to see the number of firms.`;
 
-  async function render() {
-    const chartWrap = document.getElementById("chart-wrap");
-    App.showLoading(chartWrap);
+    const ids = [...slots.keys()];
+    if (!ids.length) { renderEmpty(); return; }
+    clearEmpty();
 
+    const my = ++token;
+    App.busy(body, true);
     try {
-      const p        = App.getParams();
-      const measure  = p.measure  || "social";
-      const stat     = "mean";
-      const yearMin  = p.year_min || meta.year_min;
-      const yearMax  = p.year_max || meta.year_max;
-      const type     = p.entity_type || "country";
-      const entities = Array.from(selected);
-
-      // Slice pill
-      const typeLabel = { country:"Countries", industry:"Industries", firm:"Firms" }[type] || type;
-      App.updateSlicePill([
-        typeLabel,
-        App.MEASURES[measure],
-        `${yearMin}–${yearMax}`,
-        entities.length > 0 ? `${entities.length} selected` : "None selected",
-      ]);
-
-      if (entities.length === 0) {
-        App.hideLoading(chartWrap);
-        _showEmpty(chartWrap,
-          "Add two or more entities to compare their trends side by side.",
-          "&#x1F5C2;");
-        document.getElementById("summary-table-wrap").innerHTML = "";
-        return;
-      }
-
-      // Load entity data
-      const entityData = [];
-      for (const eid of entities) {
-        let data;
-        if (type === "country") {
-          try { data = await App.loadJSON(`agg/country/${eid}.json`); } catch { data = {}; }
-        } else if (type === "industry") {
-          try { data = await App.loadJSON(`agg/industry/${eid}.json`); } catch { data = {}; }
-        } else {
-          const firmIndex = await App.loadJSON("firm/index.json");
-          const chunkNum  = firmIndex[eid];
-          if (chunkNum !== undefined) {
-            const chunk = await App.loadJSON(`firm/chunk_${chunkNum}.json`);
-            data = chunk[eid];
-          } else { data = {}; }
-        }
-        entityData.push({ id: eid, name: entityLookup[eid] || eid, data });
-      }
-
-      // Build year range
-      let allYears = new Set();
-      entityData.forEach(ed => {
-        if (ed.data?.years) {
-          ed.data.years.forEach(y => { if (y >= yearMin && y <= yearMax) allYears.add(y); });
-        } else if (ed.data) {
-          Object.keys(ed.data).forEach(y => { if (+y >= yearMin && +y <= yearMax) allYears.add(+y); });
-        }
+      const [all, names] = await Promise.all([Promise.all(ids.map(series)), Promise.all(ids.map(nameOf))]);
+      if (my !== token) return;
+      const periods = [...new Set(all.flatMap((s) => s.periods))]
+        .filter((p) => { const y = App.periodYear(p); return y >= state.ymin && y <= state.ymax; }).sort();
+      const lag = state.freq === "quarterly" ? 4 : 1;
+      const scale = (vals) => state.scale !== "yoy" ? vals
+        : vals.map((v, i) => (i < lag || v == null || vals[i - lag] == null ? null : v - vals[i - lag]));
+      const datasets = ids.map((id, i) => ({
+        label: names[i], color: PALETTE[slots.get(id)],
+        data: scale(periods.map((p) => { const v = all[i].value(p); return v == null ? null : pct ? v * 100 : v; })),
+        meta: isFirm ? null : periods.map((p) => ({ nfirm: all[i].nfirm(p) })),
+      }));
+      const unit = pct ? "% of firms" : "sentences per 1,000";
+      Charts.line("compare-chart", { labels: periods, datasets }, {
+        yLabel: state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : `${isFirm ? "Exposure" : STATS[stat].axis}${pct ? "" : ` (${unit})`}`,
+        percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
+        events: state.events ? App.EVENTS : [], title: `${MEASURES[state.measure]} by ${type}`,
+        valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
+        filename: `compare_${state.measure}_${type}`,
       });
-      const years = Array.from(allYears).sort((a,b) => a-b).map(String);
-
-      const datasets = entityData.map((ed, i) => {
-        let vals;
-        if (ed.data?.years) {
-          const yearMap = {};
-          ed.data.years.forEach((y, idx) => { yearMap[y] = ed.data[measure]?.[idx] ?? null; });
-          vals = years.map(y => yearMap[+y] ?? null);
-        } else {
-          vals = years.map(y => {
-            const entry = ed.data[y]?.[measure];
-            return entry ? entry[stat] : null;
-          });
-        }
-        return { label: ed.name.split(" (")[0], data: vals };
-      });
-
-      _clearEmpty(chartWrap);
-      Charts.lineChart("compare-chart", { labels: years, datasets, yLabel: "Mean Exposure" },
-        { filename: `compare_${measure}_${type}` });
-
-      // Summary table
-      let tableHtml = `<table><thead><tr>
-        <th>Entity</th><th>Mean Value</th><th>Total Obs</th><th>Max Firms / Year</th>
-      </tr></thead><tbody>`;
-
-      entityData.forEach(ed => {
-        let totalN = 0, maxNfirm = 0, valSum = 0, valCount = 0;
-        if (ed.data?.years) {
-          ed.data.years.forEach((y, idx) => {
-            if (y >= yearMin && y <= yearMax && ed.data[measure]?.[idx] != null) {
-              totalN++;
-              valSum += ed.data[measure][idx];
-              valCount++;
-            }
-          });
-          maxNfirm = 1;
-        } else if (ed.data) {
-          Object.entries(ed.data).forEach(([y, ydata]) => {
-            if (+y >= yearMin && +y <= yearMax && ydata[measure]) {
-              totalN   += ydata[measure].n    || 0;
-              maxNfirm  = Math.max(maxNfirm, ydata[measure].nfirm || 0);
-              valSum   += (ydata[measure][stat] || 0) * (ydata[measure].n || 1);
-              valCount += (ydata[measure].n || 1);
-            }
-          });
-        }
-        const avgVal = valCount > 0 ? (valSum / valCount).toFixed(4) : "–";
-        tableHtml += `<tr>
-          <td>${ed.name.split(" (")[0]}</td>
-          <td>${avgVal}</td>
-          <td>${totalN.toLocaleString()}</td>
-          <td>${maxNfirm.toLocaleString()}</td>
-        </tr>`;
-      });
-      tableHtml += "</tbody></table>";
-      document.getElementById("summary-table-wrap").innerHTML = tableHtml;
-
-    } catch(e) {
-      console.error(e); App.toast("Error: " + e.message);
+      renderSummary(ids, names, all, periods, pct);
+    } catch (e) {
+      console.error(e); App.toast("Could not load data: " + e.message);
     }
-
-    App.hideLoading(chartWrap);
+    if (my === token) App.busy(body, false);
   }
 
-  function _showEmpty(chartWrap, msg, icon = "&#128202;") {
-    _clearEmpty(chartWrap);
+  function renderSummary(ids, names, all, periods, pct) {
+    const f = (v) => (v == null ? "–" : pct ? (v * 100).toFixed(1) + "%" : v.toFixed(2));
+    const rows = ids.map((id, i) => {
+      const vals = periods.map((p) => all[i].value(p));
+      const valid = vals.map((v, j) => [v, periods[j]]).filter(([v]) => v != null);
+      const avg = valid.length ? valid.reduce((a, [v]) => a + v, 0) / valid.length : null;
+      const first = valid[0], last = valid[valid.length - 1];
+      const change = first && last ? last[0] - first[0] : null;
+      const nf = last ? all[i].nfirm(last[1]) : null;
+      const href = type === "firm" ? App.link("firm.html", { id }) : App.link("explore.html", { [type]: id, measures: state.measure });
+      return `<tr>
+        <th scope="row"><span class="measure-dot" style="background:${PALETTE[slots.get(id)]};margin-right:8px"></span><a href="${href}">${esc(names[i])}</a></th>
+        <td class="num">${f(avg)}</td>
+        <td class="num">${first ? f(first[0]) + ` <span class="muted">(${first[1]})</span>` : "–"}</td>
+        <td class="num">${last ? f(last[0]) + ` <span class="muted">(${last[1]})</span>` : "–"}</td>
+        <td class="num">${change == null ? "–" : (change > 0 ? "+" : "") + (pct ? (change * 100).toFixed(1) + " pp" : change.toFixed(2))}</td>
+        ${type === "firm" ? "" : `<td class="num">${nf == null ? "–" : App.num(nf)}</td>`}
+      </tr>`;
+    });
+    document.getElementById("summary").innerHTML = `<table>
+      <thead><tr><th scope="col">${{ country: "Country", industry: "Industry", firm: "Firm" }[type]}</th>
+        <th scope="col" class="num">Average</th><th scope="col" class="num">First</th><th scope="col" class="num">Latest</th>
+        <th scope="col" class="num">Change</th>${type === "firm" ? "" : '<th scope="col" class="num">Firms (latest)</th>'}</tr></thead>
+      <tbody>${rows.join("")}</tbody></table>`;
+  }
+
+  function renderEmpty() {
+    token++;
+    App.busy(body, false);
+    clearEmpty();
     const el = document.createElement("div");
-    el.className = "empty-state"; el.id = "chart-empty-state";
-    el.innerHTML = `
-      <div class="empty-state-icon">${icon}</div>
-      <div class="empty-state-title">Nothing to show yet</div>
-      <p>${msg}</p>`;
-    chartWrap.appendChild(el);
+    el.className = "empty-state"; el.id = "chart-empty";
+    el.innerHTML = `<div class="empty-state-title">Add ${TYPE_LABEL[type].toLowerCase()} to compare</div>
+      <p>Search in the panel on the left, or start from a preset:</p>
+      <div class="dialog-actions" style="justify-content:center">
+        ${PRESETS[type].map(([l], i) => `<button type="button" class="btn btn-sm" data-preset="${i}">${esc(l)}</button>`).join("")}
+      </div>`;
+    body.appendChild(el);
+    el.querySelectorAll("[data-preset]").forEach((b) => b.onclick = () => {
+      slots = new Map(PRESETS[type][+b.dataset.preset][1].map((id, i) => [id, i]));
+      renderChips(); update();
+    });
     const canvas = document.getElementById("compare-chart");
-    if (canvas) canvas.style.display = "none";
+    canvas.style.visibility = "hidden";
+    document.getElementById("summary").innerHTML = "";
   }
-
-  function _clearEmpty(chartWrap) {
-    const el = document.getElementById("chart-empty-state");
+  function clearEmpty() {
+    const el = document.getElementById("chart-empty");
     if (el) el.remove();
-    const canvas = document.getElementById("compare-chart");
-    if (canvas) canvas.style.display = "";
+    document.getElementById("compare-chart").style.visibility = "";
   }
 
-  await loadEntityOptions();
-  render();
+  loadSelection(type);
+  await renderChips();
+  update();
 })();

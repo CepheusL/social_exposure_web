@@ -1,175 +1,310 @@
-/* ============ explore.js ============ */
+/* ============ explore.js — time trends for global / country / industry / firm ============ */
 (async () => {
+  const { MEASURES, MEASURE_KEYS, DOMAIN_KEYS, MEASURE_COLORS, STATS, esc } = App;
   const meta = await App.getMeta();
+  await App.lookups();
 
-  // Scale selector
+  const MIX_PERIODS = [[2003, 2007], [2008, 2012], [2013, 2017], [2018, 2019], [2020, 2021], [2022, 2024]];
+  const REF_COLOR = "#8a877f";
+
+  /* ---------- State from URL (with legacy multi-entity handling) ---------- */
+  const lists = { country: App.paramList("country"), industry: App.paramList("industry"), firm: App.paramList("firm") };
+  let scope = lists.firm.length ? "firm" : lists.country.length ? "country" : lists.industry.length ? "industry" : "global";
+  const totalEntities = lists.country.length + lists.industry.length + lists.firm.length;
+  const state = {
+    scope,
+    entity: scope === "global" ? null : lists[scope][0],
+    measures: (App.paramList("measures").length ? App.paramList("measures") : [App.param("measure", "social")])
+      .filter((m) => MEASURES[m]),
+    stat: STATS[App.param("stat")] ? App.param("stat") : "mean",
+    freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
+    scale: App.param("scale") === "yoy" ? "yoy" : "level",
+    view: App.param("view") === "mix" ? "mix" : "trend",
+    events: App.param("events") !== "0",
+    peers: App.param("peers") === "1",
+    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, meta.year_max),
+    ymax: App.clamp(App.paramInt("year_max", meta.year_max), meta.year_min, meta.year_max),
+  };
+  if (!state.measures.length) state.measures = ["social"];
+  if (state.ymin > state.ymax) [state.ymin, state.ymax] = [state.ymax, state.ymin];
+
+  if (totalEntities > 1) {
+    const type = scope;
+    const ids = lists[type];
+    App.notice(document.getElementById("notice"),
+      `Explore shows one ${type} at a time; showing the first of ${totalEntities} selected.
+       <a class="btn btn-sm" href="${App.link("compare.html", { entity_type: type, [type]: ids, measure: state.measures[0] })}">Open all ${ids.length} in Compare →</a>`);
+  }
+
+  function syncURL() {
+    App.setParams({
+      country: state.scope === "country" ? state.entity : null,
+      industry: state.scope === "industry" ? state.entity : null,
+      firm: state.scope === "firm" ? state.entity : null,
+      measures: state.measures, measure: null,
+      stat: state.stat === "mean" ? null : state.stat,
+      freq: state.freq === "annual" ? null : state.freq,
+      scale: state.scale === "level" ? null : state.scale,
+      view: state.view === "trend" ? null : state.view,
+      events: state.events ? null : "0",
+      peers: state.peers ? "1" : null,
+      year_min: state.ymin === meta.year_min ? null : state.ymin,
+      year_max: state.ymax === meta.year_max ? null : state.ymax,
+    });
+  }
+
+  /* ---------- Sidebar ---------- */
+  const scopeCtrl = App.segmented(document.getElementById("scope-ctrl"), {
+    name: "scope", label: "Scope", value: state.scope,
+    options: [["global", "All firms"], ["country", "Country"], ["industry", "Industry"], ["firm", "Firm"]],
+    onChange: (v) => { state.scope = v; state.entity = null; renderEntity(); if (v === "global") update(); else document.getElementById("entity-input").focus(); },
+  });
+
+  const entityInput = document.getElementById("entity-input");
+  App.combobox({
+    input: entityInput, list: document.getElementById("entity-list"),
+    getItems: (q) => state.scope === "country" ? App.searchCountries(q) : state.scope === "industry" ? App.searchIndustries(q) : App.searchFirms(q),
+    onSelect: (it) => { state.entity = it.id; entityInput.value = ""; renderEntity(); update(); },
+  });
+
+  async function entityName(scope, id) {
+    if (scope === "country") return App.countryName(id);
+    if (scope === "industry") return App.industryName(id);
+    if (scope === "firm") { const f = await App.getFirm(id); return f ? f.name : `Firm ${id}`; }
+    return "All firms";
+  }
+
+  async function renderEntity() {
+    const grp = document.getElementById("entity-group");
+    grp.hidden = state.scope === "global";
+    document.getElementById("entity-label").textContent = { country: "Country", industry: "Industry (FF48)", firm: "Firm" }[state.scope] || "";
+    entityInput.placeholder = { country: "Search countries…", industry: "Search industries…", firm: "Search by name or GVKEY…" }[state.scope] || "";
+    const chip = document.getElementById("entity-chip");
+    if (state.entity) {
+      const name = await entityName(state.scope, state.entity);
+      chip.innerHTML = `<span class="chip"><span class="chip-text">${esc(name)}</span>
+        <button type="button" aria-label="Remove ${esc(name)}">&times;</button></span>`;
+      chip.querySelector("button").onclick = () => { state.entity = null; renderEntity(); update(); };
+    } else chip.innerHTML = "";
+  }
+
+  const mList = document.getElementById("measure-list");
+  mList.innerHTML = MEASURE_KEYS.map((k) => `
+    <label class="measure-item"><input type="checkbox" value="${k}" ${state.measures.includes(k) ? "checked" : ""}>
+      <span class="measure-dot" style="background:${MEASURE_COLORS[k]}"></span>${esc(MEASURES[k])}</label>`).join("");
+  const guardMeasures = () => {
+    const boxes = [...mList.querySelectorAll("input")];
+    const checked = boxes.filter((b) => b.checked);
+    boxes.forEach((b) => { b.disabled = checked.length === 1 && b.checked; b.title = b.disabled ? "At least one measure stays selected" : ""; });
+  };
+  mList.addEventListener("change", () => {
+    state.measures = [...mList.querySelectorAll("input:checked")].map((b) => b.value);
+    guardMeasures(); update();
+  });
+  guardMeasures();
+
+  App.yearRange(document.getElementById("year-ctrl"), {
+    min: meta.year_min, max: meta.year_max, from: state.ymin, to: state.ymax,
+    onChange: (a, b) => { state.ymin = a; state.ymax = b; update(); },
+  });
+  document.getElementById("copy-link").onclick = () => App.copy(window.location.href, "Link copied");
+  App.initDrawer("drawer-toggle", "sidebar");
+
+  /* ---------- View controls ---------- */
+  const statSel = document.getElementById("ctrl-stat");
+  statSel.innerHTML = Object.entries(STATS).map(([k, s]) => `<option value="${k}">${esc(s.label)}</option>`).join("");
+  statSel.value = state.stat;
+  statSel.onchange = () => { state.stat = statSel.value; update(); };
+  const freqCtrl = App.segmented(document.getElementById("ctrl-freq"), {
+    name: "freq", label: "Frequency", value: state.freq, options: [["annual", "Annual"], ["quarterly", "Quarterly"]],
+    onChange: (v) => { state.freq = v; update(); },
+  });
+  const viewCtrl = App.segmented(document.getElementById("ctrl-view"), {
+    name: "view", label: "View", value: state.view, options: [["trend", "Trend"], ["mix", "Domain mix"]],
+    onChange: (v) => { state.view = v; update(); },
+  });
   const scaleSel = document.getElementById("ctrl-scale");
-  scaleSel.innerHTML = `<option value="level">Level</option><option value="yoy">Year-over-Year Change</option>`;
-  const initParams = App.getParams();
-  scaleSel.value = (initParams.scale === "index") ? "level" : (initParams.scale || "level");
+  scaleSel.value = state.scale;
+  scaleSel.onchange = () => { state.scale = scaleSel.value; update(); };
+  const evBox = document.getElementById("ctrl-events");
+  evBox.checked = state.events;
+  evBox.onchange = () => { state.events = evBox.checked; update(); };
+  const peersBox = document.getElementById("ctrl-peers");
+  peersBox.checked = state.peers;
+  peersBox.onchange = () => { state.peers = peersBox.checked; update(); };
 
-  // Build sidebar filter panel
-  await App.buildFilterPanel(document.getElementById("sidebar"), {
-    showMeasure:    true,
-    multiMeasure:   true,
-    onFilterChange: render,
-  });
+  function syncControls() {
+    const isFirm = state.scope === "firm" && state.entity;
+    const isMix = state.view === "mix";
+    statSel.disabled = isFirm || isMix;
+    statSel.title = isFirm ? "A single firm has one value per period" : isMix ? "The domain mix uses means" : "";
+    scaleSel.disabled = isMix;
+    evBox.disabled = isMix;
+    freqCtrl.setDisabled("quarterly", isMix);
+    const peersOk = isFirm && !isMix && state.measures.length === 1;
+    peersBox.disabled = !peersOk;
+    document.getElementById("peers-wrap").title = !isFirm ? "Select a firm to compare it with its industry and country"
+      : state.measures.length !== 1 ? "Select a single measure to compare with peers" : "";
+  }
 
-  scaleSel.addEventListener("change", () => {
-    App.setParams({ scale: scaleSel.value });
-    render(App.getParams());
-  });
+  /* ---------- Data ---------- */
+  async function getSeries(scope, id, freq) {
+    if (scope === "firm") {
+      const rec = await App.loadFirm(id, freq);
+      const map = App.firmToPeriods(rec, freq);
+      return { periods: Object.keys(map).sort(), value: (p, m) => (map[p] ? map[p][m] : null), nfirm: () => null, firm: true };
+    }
+    const data = await App.loadAgg(scope, id, freq);
+    return {
+      periods: Object.keys(data).sort(),
+      value: (p, m, stat) => (data[p] && data[p][m] ? data[p][m][stat] : null),
+      nfirm: (p) => (data[p] && data[p].social ? data[p].social.nfirm : null),
+      firm: false,
+    };
+  }
 
-  async function render(params) {
-    if (!params) params = App.getParams();
-    const chartWrap = document.getElementById("chart-wrap");
-    App.showLoading(chartWrap);
+  function applyScale(vals) {
+    if (state.scale !== "yoy") return vals;
+    const lag = state.freq === "quarterly" ? 4 : 1;
+    return vals.map((v, i) => (i < lag || v == null || vals[i - lag] == null ? null : v - vals[i - lag]));
+  }
 
+  /* ---------- Render ---------- */
+  const body = document.getElementById("chart-body");
+  let token = 0;
+
+  async function update() {
+    syncControls();
+    syncURL();
+    const my = ++token;
+    App.busy(body, true);
     try {
-      let data;
-      let scopeLabel = "";
-      let isFirmLevel = false;
-
-      const selectedCountries  = params.country  || [];
-      const selectedIndustries = params.industry || [];
-      const selectedFirms      = params.firm     || [];
-      const totalEntities = selectedCountries.length + selectedIndustries.length + selectedFirms.length;
-
-      const measures = params.measures || [params.measure || "social"];
-      if (totalEntities > 1 && measures.length > 1) {
-        App.toast("Multiple entities + measures: use the Compare page");
-      }
-
-      if (selectedFirms.length === 1) {
-        const firmIndex = await App.loadJSON("firm/index.json");
-        const chunkNum  = firmIndex[selectedFirms[0]];
-        if (chunkNum !== undefined) {
-          const chunk = await App.loadJSON(`firm/chunk_${chunkNum}.json`);
-          data = chunk[selectedFirms[0]];
-          isFirmLevel = true;
-          const firms = await App.getFirms();
-          const firm  = firms.find(f => f.id === selectedFirms[0]);
-          scopeLabel  = firm ? firm.name : selectedFirms[0];
-        }
-      } else if (selectedCountries.length === 1 && selectedIndustries.length === 0 && selectedFirms.length === 0) {
-        data = await App.loadJSON(`agg/country/${selectedCountries[0]}.json`);
-        const countries = await App.getCountries();
-        const c = countries.find(x => x.code === selectedCountries[0]);
-        scopeLabel = c ? c.name : selectedCountries[0];
-      } else if (selectedIndustries.length === 1 && selectedCountries.length === 0 && selectedFirms.length === 0) {
-        data = await App.loadJSON(`agg/industry/${selectedIndustries[0]}.json`);
-        const industries = await App.getIndustries();
-        const ind = industries.find(x => x.code === selectedIndustries[0]);
-        scopeLabel = ind ? ind.name : selectedIndustries[0];
-      } else if (totalEntities > 1) {
-        App.toast("Select only one entity, or use Compare for multiple.");
-        data = await App.loadJSON("agg/global.json");
-        scopeLabel = "Global";
-      } else {
-        data = await App.loadJSON("agg/global.json");
-        scopeLabel = "Global";
-      }
-
-      // Update page subtitle and slice pill
-      document.getElementById("explore-subtitle").textContent = `${scopeLabel} — mean exposure over time`;
-      const yearMin = params.year_min || meta.year_min;
-      const yearMax = params.year_max || meta.year_max;
-      const scale   = params.scale || "level";
-      const measureLabels = measures.map(k => App.MEASURES[k]);
-
-      App.updateSlicePill([
-        scopeLabel,
-        measureLabels.length === 1 ? measureLabels[0] : `${measureLabels.length} measures`,
-        `${yearMin}–${yearMax}`,
-        scale === "yoy" ? "YoY Change" : "Level",
-      ]);
-
-      let years, datasets;
-
-      if (isFirmLevel && data) {
-        const validIdx = [];
-        data.years.forEach((y, i) => { if (y >= yearMin && y <= yearMax) validIdx.push(i); });
-        years = validIdx.map(i => String(data.years[i]));
-
-        if (years.length === 0) {
-          _showEmpty(chartWrap, "No data in this year range for the selected firm.");
-          App.hideLoading(chartWrap);
-          return;
-        }
-
-        datasets = measures.map(key => {
-          const raw    = validIdx.map(i => data[key] ? data[key][i] : null);
-          const scaled = App.applyScale(raw, years, scale);
-          return { label: App.MEASURES[key], data: scaled };
-        });
-      } else if (data) {
-        const filtered = App.filterYears(data, yearMin, yearMax);
-        years = Object.keys(filtered).sort();
-
-        if (years.length === 0) {
-          _showEmpty(chartWrap, "No data found for the current selection.");
-          App.hideLoading(chartWrap);
-          return;
-        }
-
-        datasets = measures.map(key => {
-          const raw    = years.map(y => filtered[y]?.[key]?.[`mean`] ?? null);
-          const scaled = App.applyScale(raw, years, scale);
-          const metaArr = years.map(y => filtered[y]?.[key] ? { nfirm: filtered[y][key].nfirm } : null);
-          return { label: App.MEASURES[key], data: scaled, meta: metaArr };
-        });
-      }
-
-      // Remove any empty state
-      _clearEmpty(chartWrap);
-      const yLabel = scale === "yoy" ? "Year-over-Year Change" : "Mean Exposure";
-      Charts.lineChart("explore-chart", { labels: years, datasets, yLabel },
-        { filename: `explore_${scopeLabel.replace(/\s+/g,"_")}` });
-
-      // Coverage bar
-      if (!isFirmLevel && data) {
-        const filtered = App.filterYears(data, yearMin, yearMax);
-        const sortedYears = Object.keys(filtered).sort();
-        const mKey = measures[0];
-        const covItems = sortedYears.map(y => {
-          const entry = filtered[y]?.[mKey];
-          return entry ? `<span>${y}: ${entry.nfirm.toLocaleString()}</span>` : "";
-        }).filter(Boolean).join("");
-        document.getElementById("coverage-bar").innerHTML = covItems
-          ? `<div class="coverage-title">Number of firms</div><div class="coverage-items">${covItems}</div>`
-          : "";
-      } else {
-        document.getElementById("coverage-bar").innerHTML = "";
-      }
-
+      const scopeKey = state.scope !== "global" && state.entity ? state.scope : "global";
+      const id = scopeKey === "global" ? null : state.entity;
+      const name = await entityName(scopeKey, id);
+      if (state.view === "mix") await renderMix(scopeKey, id, name, my);
+      else await renderTrend(scopeKey, id, name, my);
     } catch (e) {
       console.error(e);
-      App.toast("Error loading data: " + e.message);
+      App.toast("Could not load data: " + e.message);
+    }
+    if (my === token) App.busy(body, false);
+  }
+
+  async function renderTrend(scopeKey, id, name, my) {
+    const s = await getSeries(scopeKey, id, state.freq);
+    if (my !== token) return;
+    const periods = s.periods.filter((p) => { const y = App.periodYear(p); return y >= state.ymin && y <= state.ymax; });
+    const stat = s.firm ? "mean" : state.stat;
+    const pct = !s.firm && STATS[stat].pct;
+    const toVal = (v) => (v == null ? null : pct ? v * 100 : v);
+    const statLabel = s.firm ? "Firm value" : STATS[stat].label;
+
+    let datasets = state.measures.map((m) => ({
+      label: MEASURES[m], color: MEASURE_COLORS[m], width: m === "social" ? 2.8 : 2,
+      data: applyScale(periods.map((p) => toVal(s.value(p, m, stat)))),
+      meta: s.firm ? null : periods.map((p) => ({ nfirm: s.nfirm(p) })),
+    }));
+
+    const peersOn = s.firm && state.peers && state.measures.length === 1;
+    if (peersOn) {
+      const firm = await App.getFirm(id);
+      const m = state.measures[0];
+      const refs = [];
+      if (firm && firm.industry) refs.push(["industry", firm.industry, `Industry: ${App.industryShort(firm.industry)}`, []]);
+      if (firm && firm.country) refs.push(["country", firm.country, `Country: ${App.countryName(firm.country)}`, [6, 4]]);
+      refs.push(["global", null, "All firms", [2, 3]]);
+      const series = await Promise.all(refs.map(([k, rid]) => getSeries(k, rid, state.freq)));
+      if (my !== token) return;
+      series.forEach((rs, i) => datasets.push({
+        label: refs[i][2] + " (mean)", color: REF_COLOR, width: 1.6, dash: refs[i][3], order: 1,
+        data: applyScale(periods.map((p) => rs.value(p, m, "mean"))),
+      }));
+      datasets[0].label = name;
     }
 
-    App.hideLoading(chartWrap);
+    const titleEl = document.getElementById("chart-title");
+    titleEl.textContent = name;
+    const mLabel = state.measures.length === 1 ? MEASURES[state.measures[0]] : `${state.measures.length} measures`;
+    document.getElementById("chart-sub").textContent =
+      `${mLabel} · ${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq === "quarterly" ? "quarterly" : "annual"}, ${state.ymin}–${state.ymax}`;
+
+    const unit = pct ? "% of firms" : "sentences per 1,000";
+    const yLabel = state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : s.firm ? `Exposure (${unit})` : `${STATS[stat].axis}${pct ? "" : ` (${unit})`}`;
+    document.getElementById("chart-caption").textContent = s.firm
+      ? `Firm-level exposure: sentences on each topic per 1,000 sentences of the firm's earnings calls in the ${state.freq === "quarterly" ? "quarter" : "year"}.` +
+        (peersOn ? " Grey lines show the mean across all firms in the firm's industry, its country, and the full sample." : "")
+      : `${statLabel} across firms ${scopeKey === "global" ? "in the full sample" : `headquartered in or classified to ${name}`}, ` +
+        `${pct ? "share of firms with at least one sentence on the topic" : "sentences per 1,000"}. Hover for the number of firms.`;
+
+    if (!periods.length) {
+      showEmpty("No data in this year range for the current selection.");
+      Charts.line("explore-chart", { labels: [], datasets: [] }, {});
+      renderCoverage(null, []);
+      return;
+    }
+    clearEmpty();
+    Charts.line("explore-chart", { labels: periods, datasets }, {
+      yLabel, percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
+      events: state.events ? App.EVENTS : [], title: name,
+      valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
+      filename: `explore_${(name || "global").replace(/\W+/g, "_")}`,
+    });
+    renderCoverage(s, periods);
   }
 
-  function _showEmpty(chartWrap, msg) {
-    _clearEmpty(chartWrap);
+  async function renderMix(scopeKey, id, name, my) {
+    const s = await getSeries(scopeKey, id, "annual");
+    if (my !== token) return;
+    const rows = [];
+    for (const [a, b] of MIX_PERIODS) {
+      const lo = Math.max(a, state.ymin), hi = Math.min(b, state.ymax);
+      if (lo > hi) continue;
+      const yrs = s.periods.filter((p) => +p >= lo && +p <= hi);
+      const tot = {};
+      DOMAIN_KEYS.forEach((m) => { tot[m] = yrs.reduce((acc, p) => acc + (s.value(p, m, "mean") || 0), 0); });
+      const sum = DOMAIN_KEYS.reduce((acc, m) => acc + tot[m], 0);
+      const label = lo === hi ? String(lo) : `${lo}–${String(hi).slice(2)}`;
+      rows.push({
+        label,
+        values: sum > 0 ? Object.fromEntries(DOMAIN_KEYS.map((m) => [m, (tot[m] / sum) * 100])) : null,
+        note: !yrs.length ? "No data" : sum > 0 ? `${yrs.length} year${yrs.length > 1 ? "s" : ""}` : "No social discussion in this period",
+      });
+    }
+    document.getElementById("chart-title").textContent = name;
+    document.getElementById("chart-sub").textContent = `Share of each domain in total domain exposure, by period, ${state.ymin}–${state.ymax}`;
+    document.getElementById("chart-caption").textContent =
+      `Each bar splits the period's combined exposure to the five domains into percentages${s.firm ? "" : " (based on mean exposure across firms)"}. ` +
+      `Periods are grouped so that 2020–21 (COVID-19) stands apart.`;
+    if (!rows.length) { showEmpty("No data in this year range."); return; }
+    clearEmpty();
+    Charts.stackRows("explore-chart", {
+      rows, keys: DOMAIN_KEYS.map((m) => ({ key: m, label: MEASURES[m], color: MEASURE_COLORS[m], ink: m === "emp" ? "#ffffff" : Charts.INK })),
+    }, { title: `${name}: domain mix by period`, filename: `mix_${(name || "global").replace(/\W+/g, "_")}` });
+    renderCoverage(s.firm ? null : s, s.periods.filter((p) => +p >= state.ymin && +p <= state.ymax));
+  }
+
+  function renderCoverage(s, periods) {
+    const card = document.getElementById("coverage-card");
+    if (!s || s.firm || !periods.length) { card.hidden = true; return; }
+    card.hidden = false;
+    Charts.bars("coverage-chart", { labels: periods, values: periods.map((p) => s.nfirm(p)), label: "Firms" }, { title: "Number of firms per period" });
+  }
+
+  function showEmpty(msg) {
+    clearEmpty();
     const el = document.createElement("div");
-    el.className = "empty-state";
-    el.id = "chart-empty-state";
-    el.innerHTML = `
-      <div class="empty-state-icon">&#128202;</div>
-      <div class="empty-state-title">No data to display</div>
-      <p>${msg || "Adjust your filters to see results."}</p>`;
-    chartWrap.appendChild(el);
-    const canvas = document.getElementById("explore-chart");
-    if (canvas) canvas.style.display = "none";
+    el.className = "empty-state"; el.id = "chart-empty";
+    el.innerHTML = `<div class="empty-state-title">No data to display</div><p>${esc(msg)}</p>`;
+    body.appendChild(el);
+    document.getElementById("explore-chart").style.visibility = "hidden";
   }
-
-  function _clearEmpty(chartWrap) {
-    const el = document.getElementById("chart-empty-state");
+  function clearEmpty() {
+    const el = document.getElementById("chart-empty");
     if (el) el.remove();
-    const canvas = document.getElementById("explore-chart");
-    if (canvas) canvas.style.display = "";
+    document.getElementById("explore-chart").style.visibility = "";
   }
 
-  render(initParams);
+  await renderEntity();
+  update();
 })();

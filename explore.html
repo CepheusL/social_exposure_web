@@ -4,70 +4,100 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Explore — Unpacking Social Exposure</title>
+  <meta name="description" content="Trends in social exposure on earnings calls for all firms, any country, industry or firm, 2003–2024.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Explore trends — Unpacking Social Exposure">
+  <meta property="og:description" content="Trends in how firms discuss social topics on their earnings calls, by country, industry and firm.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
-  <header class="navbar">
-    <span class="brand">Unpacking Social Exposure</span>
-    <nav>
-      <a href="index.html">Overview</a>
-      <a href="explore.html">Explore</a>
-      <a href="compare.html">Compare</a>
-      <a href="ranking.html">Ranking</a>
-      <a href="methods.html">Methods</a>
-    </nav>
-    <button class="hamburger" aria-label="Menu">&#9776;</button>
-  </header>
-
-  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
 
   <div class="page-wrapper">
-    <aside class="sidebar" id="sidebar"></aside>
-    <div class="main-content">
-      <p class="page-eyebrow">Time Trends</p>
-      <h1>Explore</h1>
-      <p class="subtitle" id="explore-subtitle">Global trend across all firms</p>
-
-      <div id="slice-pill" class="slice-pill" style="display:none"></div>
-
-      <p class="filter-hint">Select one or more measures from the sidebar. Optionally narrow to a country, industry (FF48 industries), or firm (by firm name or its GVKEY). Only one entity type can be active at a time. Without an entity selected, the chart shows the global average across all firms.</p>
-
-      <div class="view-controls">
-        <div>
-          <label>Scale:</label>
-          <select id="ctrl-scale"></select>
+    <aside class="sidebar" id="sidebar" aria-label="Filters">
+      <div class="filter-group">
+        <span class="filter-label" id="scope-label">Scope</span>
+        <div id="scope-ctrl"></div>
+      </div>
+      <div class="filter-group" id="entity-group" hidden>
+        <label class="filter-label" for="entity-input" id="entity-label">Country</label>
+        <div class="chip-row" id="entity-chip"></div>
+        <div class="combo">
+          <input type="search" id="entity-input" placeholder="Search…">
+          <div class="dropdown-list" id="entity-list"></div>
         </div>
       </div>
+      <div class="filter-group">
+        <span class="filter-label">Measures</span>
+        <div class="measure-list" id="measure-list"></div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Years</span>
+        <div id="year-ctrl"></div>
+      </div>
+      <div class="filter-actions">
+        <a class="btn btn-sm" href="explore.html">Reset</a>
+        <button type="button" class="btn btn-sm" id="copy-link">Copy link</button>
+      </div>
+    </aside>
 
-      <div class="chart-container" style="height:420px" id="chart-wrap">
-        <canvas id="explore-chart"></canvas>
+    <main class="main-content" id="main">
+      <p class="page-eyebrow">Time trends</p>
+      <h1>Explore</h1>
+      <p class="subtitle">Follow any domain over time for all firms, a country, an industry or a single firm. Switch statistics to see how widespread a topic is, not just its average.</p>
+
+      <div id="notice"></div>
+
+      <div class="view-controls" role="group" aria-label="Chart options">
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-stat">Statistic</label><select id="ctrl-stat"></select></div>
+        <div class="ctrl"><span class="ctrl-label">Frequency</span><div id="ctrl-freq"></div></div>
+        <div class="ctrl"><span class="ctrl-label">View</span><div id="ctrl-view"></div></div>
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-scale">Scale</label>
+          <select id="ctrl-scale">
+            <option value="level">Level</option>
+            <option value="yoy">Change vs a year earlier</option>
+          </select>
+        </div>
+        <label class="switch"><input type="checkbox" id="ctrl-events" checked> Events</label>
+        <label class="switch" id="peers-wrap"><input type="checkbox" id="ctrl-peers"> Compare with peers</label>
       </div>
 
-      <div class="coverage-bar" id="coverage-bar"></div>
-    </div>
+      <figure class="chart-card" id="card-main">
+        <div class="chart-head">
+          <div>
+            <h2 class="chart-title" id="chart-title">All firms</h2>
+            <p class="chart-sub" id="chart-sub"></p>
+          </div>
+          <div class="chart-tools"></div>
+        </div>
+        <div class="chart-body" id="chart-body" style="height:430px"><canvas id="explore-chart"></canvas></div>
+        <figcaption class="chart-foot">
+          <p class="chart-caption" id="chart-caption"></p>
+          <button class="link-btn table-toggle" type="button">View as table</button>
+        </figcaption>
+        <div class="chart-table" hidden></div>
+      </figure>
+
+      <div class="coverage-card" id="coverage-card">
+        <h3>Firms in sample</h3>
+        <div class="chart-body"><canvas id="coverage-chart"></canvas></div>
+      </div>
+    </main>
   </div>
 
-  <button class="sidebar-toggle-mobile" id="sidebar-toggle-mobile">&#9776; Filters</button>
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-cite">
-        <strong>Citation:</strong> Liu, Sautner, van Lent, Vilkov, and Zhang. &ldquo;Unpacking Social Exposure.&rdquo;
-        &nbsp;&middot;&nbsp; Data: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">osf.io/kawbj</a>
-      </div>
-      <div class="footer-links">
-        <a href="PAPER LINK PLACEHOLDER">Source Paper</a>
-        <a href="https://osf.io/kawbj" target="_blank" rel="noopener">Data Repository</a>
-      </div>
-    </div>
-  </footer>
+  <button class="drawer-toggle" id="drawer-toggle" type="button">Filters</button>
+  <div id="site-footer"></div>
 
   <script src="lib/chart.umd.min.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/explore.js"></script>
+  <script src="js/app.js?v=7"></script>
+  <script src="js/charts.js?v=7"></script>
+  <script src="js/explore.js?v=7"></script>
 </body>
 </html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firm profiles — Unpacking Social Exposure</title>
+  <meta name="description" content="Profiles of 15,000+ firms: social exposure on earnings calls by domain, percentile ranks and peers, 2003–2024.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Firm profiles — Unpacking Social Exposure">
+  <meta property="og:description" content="How much does a firm talk about social topics on its earnings calls, compared with its peers?">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <div class="page-wrapper no-sidebar">
+    <main class="main-content" id="main">
+
+      <!-- Search landing (no firm selected) -->
+      <section id="firm-search-view" hidden>
+        <div class="firm-empty">
+          <p class="page-eyebrow">Firm profiles</p>
+          <h1>Look up any firm</h1>
+          <p class="subtitle" style="margin:0 auto" id="search-sub">Search by company name or GVKEY.</p>
+          <div class="search-box light combo">
+            <label class="sr-only" for="firm-search-big">Search firms</label>
+            <input type="search" id="firm-search-big" placeholder="Search by name or GVKEY…" autofocus>
+            <div class="dropdown-list" id="firm-search-big-list"></div>
+          </div>
+        </div>
+        <div class="section" id="recent-wrap" hidden>
+          <div class="section-head"><h2>Recently viewed</h2></div>
+          <div class="featured-grid" id="recent"></div>
+        </div>
+        <div class="section">
+          <div class="section-head"><div><h2>Well-known firms</h2><p class="lede">A starting point from around the world.</p></div></div>
+          <div class="featured-grid" id="pool"></div>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section id="firm-view" hidden>
+        <div class="ranking-toolbar" style="justify-content:space-between">
+          <a href="firm.html" class="section-link" style="font-size:.8rem">All firms</a>
+          <div class="search-box light combo" style="max-width:340px">
+            <label class="sr-only" for="firm-search">Find another firm</label>
+            <input type="search" id="firm-search" placeholder="Find another firm…">
+            <div class="dropdown-list" id="firm-search-list"></div>
+          </div>
+        </div>
+
+        <div class="firm-hero">
+          <div>
+            <p class="page-eyebrow">Firm profile</p>
+            <h1 id="firm-name">—</h1>
+            <div class="firm-meta" id="firm-meta"></div>
+          </div>
+          <div class="firm-actions">
+            <a class="btn btn-sm" id="act-explore">Open in Explore</a>
+            <a class="btn btn-sm" id="act-compare">Compare with peers</a>
+            <button type="button" class="btn btn-sm" id="act-link">Copy link</button>
+          </div>
+        </div>
+
+        <div class="kpis" id="kpis"></div>
+
+        <div class="view-controls" role="group" aria-label="Chart options">
+          <div class="ctrl"><label class="ctrl-label" for="ctrl-measure">Measure</label><select id="ctrl-measure"></select></div>
+          <div class="ctrl"><span class="ctrl-label">Frequency</span><div id="ctrl-freq"></div></div>
+          <label class="switch"><input type="checkbox" id="ctrl-events" checked> Events</label>
+        </div>
+
+        <figure class="chart-card" id="card-main">
+          <div class="chart-head">
+            <div>
+              <h2 class="chart-title" id="main-title">Exposure over time</h2>
+              <p class="chart-sub" id="main-sub"></p>
+            </div>
+            <div class="chart-tools"></div>
+          </div>
+          <div class="chart-body" id="main-body" style="height:380px"><canvas id="firm-chart"></canvas></div>
+          <figcaption class="chart-foot">
+            <p class="chart-caption" id="main-caption"></p>
+            <button class="link-btn table-toggle" type="button">View as table</button>
+          </figcaption>
+          <div class="chart-table" hidden></div>
+        </figure>
+
+        <div class="chart-card">
+          <div class="chart-head">
+            <div>
+              <h2 class="chart-title">By domain</h2>
+              <p class="chart-sub" id="dm-sub">Annual exposure to each domain, same scale across panels</p>
+            </div>
+          </div>
+          <div class="domain-multiples" id="domains"></div>
+        </div>
+
+        <div class="two-col">
+          <figure class="chart-card" id="card-pct">
+            <div class="chart-head">
+              <div>
+                <h2 class="chart-title">Percentile rank over time</h2>
+                <p class="chart-sub">Overall social exposure relative to other firms in the same year</p>
+              </div>
+              <div class="chart-tools"></div>
+            </div>
+            <div class="chart-body" style="height:300px"><canvas id="pct-chart"></canvas></div>
+            <figcaption class="chart-foot">
+              <p class="chart-caption">100 = highest exposure that year; 50 = the median firm.</p>
+              <button class="link-btn table-toggle" type="button">View as table</button>
+            </figcaption>
+            <div class="chart-table" hidden></div>
+          </figure>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div>
+                <h2 class="chart-title">Closest peers</h2>
+                <p class="chart-sub">Same industry, most similar average exposure (at least 5 years of data)</p>
+              </div>
+            </div>
+            <div class="domain-list" id="peers"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="lib/chart.umd.min.js"></script>
+  <script src="js/app.js?v=7"></script>
+  <script src="js/charts.js?v=7"></script>
+  <script src="js/firm.js?v=7"></script>
+</body>
+</html>

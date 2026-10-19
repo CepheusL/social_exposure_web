@@ -3,37 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data &amp; Methods — Unpacking Social Exposure</title>
+  <title>Methods — Unpacking Social Exposure</title>
+  <meta name="description" content="How the social exposure measures are built, the 20-topic taxonomy, and dataset coverage.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Methods — Unpacking Social Exposure">
+  <meta property="og:description" content="The 20-topic taxonomy of social exposure on earnings calls and dataset coverage.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
-  <header class="navbar">
-    <span class="brand">Unpacking Social Exposure</span>
-    <nav>
-      <a href="index.html">Overview</a>
-      <a href="explore.html">Explore</a>
-      <a href="compare.html">Compare</a>
-      <a href="ranking.html">Ranking</a>
-      <a href="methods.html">Methods</a>
-    </nav>
-    <button class="hamburger" aria-label="Menu">&#9776;</button>
-  </header>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
 
   <div class="page-wrapper no-sidebar">
-    <div class="main-content">
+    <main class="main-content" id="main">
       <p class="page-eyebrow">Data &amp; Methodology</p>
       <h1>Methods</h1>
       <p class="subtitle">Methodology, topic taxonomy, and dataset coverage.</p>
 
       <div class="method-section">
         <h2>Methodology</h2>
-        <p>The social exposure measures are constructed from corporate earnings conference call transcripts. We identify all social discussions and decompose them into <strong>20 topics</strong> using a <strong> structured LLM taxonomy geneartion approach</strong>. The 20 topics are then grouped into <strong>5 economic domains</strong> (Employee Welfare, DEI, Stakeholder Outreach, Ethical Commitment, and Crisis Response), plus an overall Social Exposure measure that aggregates all dimensions.</p>
+        <p>The social exposure measures are constructed from corporate earnings conference call transcripts. We identify all social discussions and decompose them into <strong>20 topics</strong> using a <strong>structured LLM taxonomy generation approach</strong>. The 20 topics are then grouped into <strong>5 economic domains</strong> (Employee Welfare, DEI, Stakeholder Outreach, Ethical Commitment, and Crisis Response), plus an overall Social Exposure measure that aggregates all dimensions.</p>
         <p>All measures are computed as <strong>(sentences devoted to specific social topic / total sentences in the conference call) &times; 1000</strong> at the firm level per period.</p>
         <p>For a detailed description of the methodology, please refer to our paper:</p>
-        <p style="margin-left:20px;color:var(--text-secondary)">Liu, Sautner, van Lent, Vilkov, and Zhang. &ldquo;Unpacking Social Exposure.&rdquo;</p>
+        <p class="cite-text" id="methods-cite" style="margin-left:0"></p>
         <p>The full dataset with firm-year and firm-quarter level data is available on our OSF repository: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">https://osf.io/kawbj</a></p>
       </div>
 
@@ -42,22 +40,22 @@
         <p>The 20 social topics are organized into 5 domains as follows:</p>
         <div class="table-container">
           <table>
-            <thead><tr><th>Domain</th><th>Topic</th><th>Description</th></tr></thead>
+            <thead><tr><th scope="col">Domain</th><th scope="col">Topic</th><th scope="col">Description</th></tr></thead>
             <tbody>
-              <tr><td rowspan="3" style="vertical-align:top;font-weight:600;background:#8ECFC920">Employee Welfare</td><td>Employee Welfare and Engagement</td><td>Focus on employee health, safety, and skill enhancement.</td></tr>
+              <tr><th scope="rowgroup" rowspan="3" class="tax-domain" data-measure="emp">Employee Welfare</th><td>Employee Welfare and Engagement</td><td>Focus on employee health, safety, and skill enhancement.</td></tr>
               <tr><td>Remote Work Policies</td><td>Focus on remote work and flexible schedules.</td></tr>
               <tr><td>Mental Health Support</td><td>Support for mental health awareness and resources.</td></tr>
 
-              <tr><td rowspan="5" style="vertical-align:top;font-weight:600;background:#FFBE7A20">Ethical Commitment</td><td>Ethical Practices</td><td>Commitment to ethical practices and governance.</td></tr>
+              <tr><th scope="rowgroup" rowspan="5" class="tax-domain" data-measure="eth">Ethical Commitment</th><td>Ethical Practices</td><td>Commitment to ethical practices and governance.</td></tr>
               <tr><td>Product and Customer Safety</td><td>Ensure product safety and quality.</td></tr>
               <tr><td>Consumer Privacy and Data Protection</td><td>Ensuring consumer data protection and privacy.</td></tr>
               <tr><td>Sustainable Practices</td><td>Commitment to sustainable practices and reducing impact.</td></tr>
               <tr><td>Social Equity and Justice</td><td>Initiatives addressing social equity and systemic inequalities.</td></tr>
 
-              <tr><td rowspan="2" style="vertical-align:top;font-weight:600;background:#FA7F6F20">DEI</td><td>Diversity Equity and Inclusion</td><td>Promoting diversity, equity, and inclusion in the workforce.</td></tr>
+              <tr><th scope="rowgroup" rowspan="2" class="tax-domain" data-measure="dei">DEI</th><td>Diversity Equity and Inclusion</td><td>Promoting diversity, equity, and inclusion in the workforce.</td></tr>
               <tr><td>Gender Equality</td><td>Commitment to gender equality and women's advancement.</td></tr>
 
-              <tr><td rowspan="8" style="vertical-align:top;font-weight:600;background:#82B0D220">Stakeholder Outreach</td><td>Community Engagement and Development</td><td>Efforts to engage communities and support wellbeing.</td></tr>
+              <tr><th scope="rowgroup" rowspan="8" class="tax-domain" data-measure="stk">Stakeholder Outreach</th><td>Community Engagement and Development</td><td>Efforts to engage communities and support wellbeing.</td></tr>
               <tr><td>Healthcare Access and Innovation</td><td>Improving healthcare access and innovating solutions.</td></tr>
               <tr><td>Affordable Housing</td><td>Addressing housing affordability and availability.</td></tr>
               <tr><td>Impact Investment</td><td>Balancing returns with positive social impacts.</td></tr>
@@ -66,7 +64,7 @@
               <tr><td>Social Innovation</td><td>Innovative social impact practices.</td></tr>
               <tr><td>Supplier Responsibility</td><td>Ensuring ethical and sustainable supplier practices.</td></tr>
 
-              <tr><td rowspan="2" style="vertical-align:top;font-weight:600;background:#BEB8DC20">Crisis Response</td><td>Crisis Response and Management</td><td>Corporate actions during crises like pandemics or disasters.</td></tr>
+              <tr><th scope="rowgroup" rowspan="2" class="tax-domain" data-measure="crisis">Crisis Response</th><td>Crisis Response and Management</td><td>Corporate actions during crises like pandemics or disasters.</td></tr>
               <tr><td>Humanitarian Aid</td><td>Support during crises and disaster relief.</td></tr>
             </tbody>
           </table>
@@ -75,37 +73,27 @@
 
       <div class="method-section">
         <h2>Coverage by Year</h2>
-        <div class="table-container" id="coverage-year"></div>
+        <p id="coverage-note"></p>
+        <div class="table-container scroll" id="coverage-year"></div>
       </div>
 
       <div class="method-section">
         <h2>Coverage by Country (Top 30)</h2>
-        <div class="table-container" id="coverage-country"></div>
+        <div class="table-container scroll" id="coverage-country"></div>
       </div>
 
       <div class="method-section">
         <h2>Coverage by Industry</h2>
-        <div class="table-container" id="coverage-industry"></div>
+        <div class="table-container scroll" id="coverage-industry"></div>
       </div>
-    </div>
+    </main>
   </div>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-cite">
-        <strong>Citation:</strong> Liu, Sautner, van Lent, Vilkov, and Zhang. &ldquo;Unpacking Social Exposure.&rdquo;
-        &nbsp;&middot;&nbsp; Data: <a href="https://osf.io/kawbj" target="_blank" rel="noopener">osf.io/kawbj</a>
-      </div>
-      <div class="footer-links">
-        <a href="PAPER LINK PLACEHOLDER">Source Paper</a>
-        <a href="https://osf.io/kawbj" target="_blank" rel="noopener">Data Repository</a>
-      </div>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 
   <script src="lib/chart.umd.min.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/methods.js"></script>
+  <script src="js/app.js?v=7"></script>
+  <script src="js/charts.js?v=7"></script>
+  <script src="js/methods.js?v=7"></script>
 </body>
 </html>
