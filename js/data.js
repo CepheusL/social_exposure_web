@@ -50,14 +50,14 @@
   /**
    * Turns the ReadMe's plain-text conventions into HTML: "===" / "---" underlines become headings,
    * indented "- item" / "(i) item" lines become lists, other indented lines become inset blocks,
-   * and blank lines separate paragraphs. URLs become links, except the OSF repository.
+   * and blank lines separate paragraphs. URLs become links.
    */
   function renderReadme(src) {
     const lines = src.replace(/\r\n?/g, "\n").split("\n");
     const out = [];
     let para = [], list = [], inset = [];
-    const inline = (s) => esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;)”’"]/g, (u) =>
-      /osf\.io/i.test(u) ? u : `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+    const inline = (s) => esc(s).replace(/https?:\/\/[^\s<]+[^\s<.,;)”’"]/g,
+      (u) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
     const flush = () => {
       if (para.length) out.push(`<p>${para.map(inline).join("<br>")}</p>`);
       if (list.length) out.push(`<ul>${list.map((l) => `<li>${inline(l)}</li>`).join("")}</ul>`);

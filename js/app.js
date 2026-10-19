@@ -201,13 +201,8 @@ const App = (() => {
               <a href="${SITE.dataUrl}">Data</a>
               <button type="button" class="footer-cite-btn" data-open-cite>Cite</button>
             </nav>
-            <p class="footer-version" id="footer-version"></p>
           </div>
         </footer>`;
-      getMeta().then((m) => {
-        const el = document.getElementById("footer-version");
-        if (el) el.textContent = `Data: ${m.data_version} · ${num(m.n_firms)} firms, ${m.year_min}–${m.year_max}`;
-      }).catch(() => {});
     }
     document.querySelectorAll("[data-open-cite]").forEach((b) => b.addEventListener("click", openCite));
 

@@ -1,7 +1,7 @@
 Unpacking Social Exposure
 =========================
 
-Data repository: https://osf.io/kawbj
+Data repository: https://cepheusl.github.io/social_exposure_web/data.html
 Files:
   (i)  osf_social_expo_firm_quarter_2003_2025q1.csv
   (ii) osf_social_expo_firm_year_2003_2025q1.csv
@@ -62,6 +62,6 @@ Please cite the following study when using this Social Exposure dataset:
 
 The data are publicly available and free to use, provided that the data source is acknowledged as follows:
 
-  M. Liu, Z. Sautner, L. van Lent, and R. Zhang. ”Data for ‘Unpacking Social Exposure’”. https://osf.io/kawbj
+  M. Liu, Z. Sautner, L. van Lent, and R. Zhang. ”Data for ‘Unpacking Social Exposure’”. https://cepheusl.github.io/social_exposure_web/data.html
 
 Please cite both the dataset and the associated paper in any work that uses these resources.
