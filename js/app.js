@@ -5,7 +5,7 @@ const App = (() => {
   const SITE = {
     name: "Unpacking Social Exposure",
     paperUrl: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6770779",
-    dataUrl: "https://osf.io/kawbj",
+    dataUrl: "data.html",
     shortCite: "Liu, Sautner, van Lent & Zhang (2026)",
     citation:
       "Liu, Mingyang and Sautner, Zacharias and van Lent, Laurence and Zhang, Ruishen, Unpacking Social Exposure " +
@@ -28,7 +28,7 @@ const App = (() => {
 
   const NAV = [
     ["index.html", "Overview"], ["explore.html", "Explore"], ["compare.html", "Compare"],
-    ["firm.html", "Firms"], ["ranking.html", "Ranking"], ["patterns.html", "Patterns"], ["methods.html", "Methods"],
+    ["firm.html", "Firms"], ["ranking.html", "Ranking"], ["patterns.html", "Patterns"], ["methods.html", "Methods"], ["data.html", "Data"],
   ];
 
   /* Measures: order matters (adjacent colours are validated for colour-vision deficiency in this order) */
@@ -198,7 +198,7 @@ const App = (() => {
             <p class="footer-cite">${esc(SITE.shortCite)}. <em>Unpacking Social Exposure</em>. SSRN Working Paper 6770779.</p>
             <nav class="footer-links" aria-label="Footer">
               <a href="${SITE.paperUrl}" target="_blank" rel="noopener">Paper</a>
-              <a href="${SITE.dataUrl}" target="_blank" rel="noopener">Data (OSF)</a>
+              <a href="${SITE.dataUrl}">Data</a>
               <button type="button" class="footer-cite-btn" data-open-cite>Cite</button>
             </nav>
             <p class="footer-version" id="footer-version"></p>

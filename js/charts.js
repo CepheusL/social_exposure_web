@@ -205,7 +205,7 @@ const Charts = (() => {
       const meta = await App.getMeta();
       const title = (card.querySelector(".chart-title") || {}).textContent || document.title;
       const text = `${title}. Source: ${App.SITE.shortCite}, "Unpacking Social Exposure," SSRN Working Paper 6770779; ` +
-        `data: ${meta.data_version} (osf.io/kawbj). ${window.location.href}`;
+        `data: ${meta.data_version}. ${window.location.href}`;
       App.copy(text, "Chart citation copied");
     };
     tools.querySelector('[data-act="link"]').onclick = () => App.copy(window.location.href, "Link copied");
