@@ -71,7 +71,7 @@
   const state = {
     measure: MEASURES[App.param("measure")] ? App.param("measure") : "social",
     freq: App.param("freq") === "quarterly" || !rec ? "quarterly" : "annual",
-    events: App.param("events") !== "0",
+    events: App.param("events") === "1",
   };
   const mSel = document.getElementById("ctrl-measure");
   mSel.innerHTML = MEASURE_KEYS.map((k) => `<option value="${k}">${esc(MEASURES[k])}</option>`).join("");
@@ -89,7 +89,7 @@
   const body = document.getElementById("main-body");
   let token = 0;
   async function renderMain() {
-    App.setParams({ measure: state.measure === "social" ? null : state.measure, freq: state.freq === "annual" ? null : state.freq, events: state.events ? null : "0" });
+    App.setParams({ measure: state.measure === "social" ? null : state.measure, freq: state.freq === "annual" ? null : state.freq, events: state.events ? "1" : null });
     const my = ++token;
     App.busy(body, true);
     try {
@@ -113,7 +113,7 @@
       document.getElementById("main-caption").textContent =
         `Firm-level exposure compared with the mean across firms in its industry (Fama-French 48), its headquarters country, and the full sample.`;
       Charts.line("firm-chart", { labels: periods, datasets }, {
-        yLabel: "Exposure (sentences per 1,000)", events: state.events ? App.EVENTS : [], title: `${firm.name}: ${MEASURES[m]}`,
+        yLabel: "Exposure (sentences per 1,000)", events: state.events ? App.EVENTS[freq] : [], title: `${firm.name}: ${MEASURES[m]}`,
         filename: `firm_${firm.id}_${m}`,
       });
     } catch (e) { console.error(e); App.toast("Could not load data: " + e.message); }
@@ -175,7 +175,7 @@
     document.getElementById("firm-search-view").hidden = false;
     document.getElementById("search-sub").textContent = missingId
       ? `No firm with GVKEY ${missingId} in the data. Search by company name or GVKEY.`
-      : `${num(meta.n_firms)} firms in ${meta.n_countries} countries. Search by company name or GVKEY.`;
+      : `${num(meta.dataset.firms)} firms in ${meta.dataset.countries} countries. Search by company name or GVKEY.`;
     App.combobox({ input: document.getElementById("firm-search-big"), list: document.getElementById("firm-search-big-list"),
                    getItems: (q) => App.searchFirms(q, 20), onSelect: goFirm });
     const featured = await App.loadJSON("featured.json");

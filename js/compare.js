@@ -17,15 +17,17 @@
            ["Energy majors", ["4503", "24625", "2410", "222111"]]],
   };
 
+  // Year filters run to the last quarter's year (2025): quarterly views reach 2025Q1, annual data simply ends at 2024
+  const LAST_YEAR = +meta.quarter_max.slice(0, 4);
   let type = ["country", "industry", "firm"].includes(App.param("entity_type")) ? App.param("entity_type") : "country";
   const state = {
     measure: MEASURES[App.param("measure")] ? App.param("measure") : "social",
     stat: STATS[App.param("stat")] ? App.param("stat") : "mean",
     freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
     scale: App.param("scale") === "yoy" ? "yoy" : "level",
-    events: App.param("events") !== "0",
-    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, meta.year_max),
-    ymax: App.clamp(App.paramInt("year_max", meta.year_max), meta.year_min, meta.year_max),
+    events: App.param("events") === "1",
+    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, LAST_YEAR),
+    ymax: App.clamp(App.paramInt("year_max", LAST_YEAR), meta.year_min, LAST_YEAR),
   };
   if (state.ymin > state.ymax) [state.ymin, state.ymax] = [state.ymax, state.ymin];
   let slots = new Map(); // id -> palette index
@@ -43,8 +45,8 @@
       entity_type: type, country: null, industry: null, firm: null, [type]: [...slots.keys()],
       measure: state.measure, stat: state.stat === "mean" ? null : state.stat,
       freq: state.freq === "annual" ? null : state.freq, scale: state.scale === "level" ? null : state.scale,
-      events: state.events ? null : "0",
-      year_min: state.ymin === meta.year_min ? null : state.ymin, year_max: state.ymax === meta.year_max ? null : state.ymax,
+      events: state.events ? "1" : null,
+      year_min: state.ymin === meta.year_min ? null : state.ymin, year_max: state.ymax === LAST_YEAR ? null : state.ymax,
     });
   }
 
@@ -99,7 +101,7 @@
   sSel.value = state.stat;
   sSel.onchange = () => { state.stat = sSel.value; update(); };
   App.yearRange(document.getElementById("year-ctrl"), {
-    min: meta.year_min, max: meta.year_max, from: state.ymin, to: state.ymax,
+    min: meta.year_min, max: LAST_YEAR, from: state.ymin, to: state.ymax,
     onChange: (a, b) => { state.ymin = a; state.ymax = b; update(); },
   });
   document.getElementById("copy-link").onclick = () => App.copy(window.location.href, "Link copied");
@@ -146,7 +148,7 @@
     const statLabel = isFirm ? "Firm value" : STATS[stat].label;
     document.getElementById("chart-title").textContent = `${MEASURES[state.measure]} · ${TYPE_LABEL[type]}`;
     document.getElementById("chart-sub").textContent =
-      `${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq}, ${state.ymin}–${state.ymax}`;
+      `${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq}`;
     document.getElementById("chart-caption").textContent = isFirm
       ? "Firm-level exposure: sentences on the topic per 1,000 sentences of each firm's earnings calls."
       : `${statLabel} across the firms in each ${type === "country" ? "country (by headquarters)" : "industry (Fama-French 48)"}; ` +
@@ -163,6 +165,7 @@
       if (my !== token) return;
       const periods = [...new Set(all.flatMap((s) => s.periods))]
         .filter((p) => { const y = App.periodYear(p); return y >= state.ymin && y <= state.ymax; }).sort();
+      if (periods.length) document.getElementById("chart-sub").textContent += `, ${periods[0]}–${periods[periods.length - 1]}`;
       const lag = state.freq === "quarterly" ? 4 : 1;
       const scale = (vals) => state.scale !== "yoy" ? vals
         : vals.map((v, i) => (i < lag || v == null || vals[i - lag] == null ? null : v - vals[i - lag]));
@@ -175,7 +178,7 @@
       Charts.line("compare-chart", { labels: periods, datasets }, {
         yLabel: state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : `${isFirm ? "Exposure" : STATS[stat].axis}${pct ? "" : ` (${unit})`}`,
         percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
-        events: state.events ? App.EVENTS : [], title: `${MEASURES[state.measure]} by ${type}`,
+        events: state.events ? App.EVENTS[state.freq] : [], title: `${MEASURES[state.measure]} by ${type}`,
         valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
         filename: `compare_${state.measure}_${type}`,
       });

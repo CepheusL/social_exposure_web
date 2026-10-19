@@ -53,9 +53,15 @@ const App = (() => {
   const STAT_KEYS = Object.keys(STATS);
   const UNIT = "sentences per 1,000";
 
-  const EVENTS = [
-    { from: 2020, to: 2020, label: "COVID-19 · racial-justice protests", short: "COVID-19" },
-  ];
+  /* Event bands, shown only when the viewer turns on the Events switch. Ranges are period strings.
+     Quarterly: COVID-19 marks the quarter the pandemic was declared, the protests the quarter they began. */
+  const EVENTS = {
+    annual: [{ from: "2020", to: "2020", label: "COVID-19 · racial-justice protests", short: "COVID-19" }],
+    quarterly: [
+      { from: "2020Q1", to: "2020Q1", label: "COVID-19 · 2020Q1", short: "COVID-19", align: "end" },
+      { from: "2020Q2", to: "2020Q2", label: "Racial-justice protests · 2020Q2", short: "Protests", align: "end" },
+    ],
+  };
 
   /* ---------- Small utilities ---------- */
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>

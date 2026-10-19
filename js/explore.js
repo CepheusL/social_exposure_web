@@ -4,6 +4,8 @@
   const meta = await App.getMeta();
   await App.lookups();
 
+  // Year filters run to the last quarter's year (2025): quarterly views reach 2025Q1, annual data simply ends at 2024
+  const LAST_YEAR = +meta.quarter_max.slice(0, 4);
   const MIX_PERIODS = [[2003, 2007], [2008, 2012], [2013, 2017], [2018, 2019], [2020, 2021], [2022, 2024]];
   const REF_COLOR = "#8a877f";
 
@@ -20,10 +22,10 @@
     freq: App.param("freq") === "quarterly" ? "quarterly" : "annual",
     scale: App.param("scale") === "yoy" ? "yoy" : "level",
     view: App.param("view") === "mix" ? "mix" : "trend",
-    events: App.param("events") !== "0",
+    events: App.param("events") === "1",
     peers: App.param("peers") === "1",
-    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, meta.year_max),
-    ymax: App.clamp(App.paramInt("year_max", meta.year_max), meta.year_min, meta.year_max),
+    ymin: App.clamp(App.paramInt("year_min", meta.year_min), meta.year_min, LAST_YEAR),
+    ymax: App.clamp(App.paramInt("year_max", LAST_YEAR), meta.year_min, LAST_YEAR),
   };
   if (!state.measures.length) state.measures = ["social"];
   if (state.ymin > state.ymax) [state.ymin, state.ymax] = [state.ymax, state.ymin];
@@ -46,10 +48,10 @@
       freq: state.freq === "annual" ? null : state.freq,
       scale: state.scale === "level" ? null : state.scale,
       view: state.view === "trend" ? null : state.view,
-      events: state.events ? null : "0",
+      events: state.events ? "1" : null,
       peers: state.peers ? "1" : null,
       year_min: state.ymin === meta.year_min ? null : state.ymin,
-      year_max: state.ymax === meta.year_max ? null : state.ymax,
+      year_max: state.ymax === LAST_YEAR ? null : state.ymax,
     });
   }
 
@@ -104,7 +106,7 @@
   guardMeasures();
 
   App.yearRange(document.getElementById("year-ctrl"), {
-    min: meta.year_min, max: meta.year_max, from: state.ymin, to: state.ymax,
+    min: meta.year_min, max: LAST_YEAR, from: state.ymin, to: state.ymax,
     onChange: (a, b) => { state.ymin = a; state.ymax = b; update(); },
   });
   document.getElementById("copy-link").onclick = () => App.copy(window.location.href, "Link copied");
@@ -227,7 +229,7 @@
     titleEl.textContent = name;
     const mLabel = state.measures.length === 1 ? MEASURES[state.measures[0]] : `${state.measures.length} measures`;
     document.getElementById("chart-sub").textContent =
-      `${mLabel} · ${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq === "quarterly" ? "quarterly" : "annual"}, ${state.ymin}–${state.ymax}`;
+      `${mLabel} · ${statLabel}${state.scale === "yoy" ? " · change vs a year earlier" : ""} · ${state.freq === "quarterly" ? "quarterly" : "annual"}${periods.length ? `, ${periods[0]}–${periods[periods.length - 1]}` : ""}`;
 
     const unit = pct ? "% of firms" : "sentences per 1,000";
     const yLabel = state.scale === "yoy" ? `Change (${pct ? "percentage points" : unit})` : s.firm ? `Exposure (${unit})` : `${STATS[stat].axis}${pct ? "" : ` (${unit})`}`;
@@ -246,7 +248,7 @@
     clearEmpty();
     Charts.line("explore-chart", { labels: periods, datasets }, {
       yLabel, percent: pct && state.scale !== "yoy", zeroBase: state.scale !== "yoy",
-      events: state.events ? App.EVENTS : [], title: name,
+      events: state.events ? App.EVENTS[state.freq] : [], title: name,
       valueFmt: (v) => (v == null ? "–" : pct ? v.toFixed(1) + (state.scale === "yoy" ? " pp" : "%") : v.toFixed(2)),
       filename: `explore_${(name || "global").replace(/\W+/g, "_")}`,
     });
@@ -272,7 +274,9 @@
       });
     }
     document.getElementById("chart-title").textContent = name;
-    document.getElementById("chart-sub").textContent = `Share of each domain in total domain exposure, by period, ${state.ymin}–${state.ymax}`;
+    const inRange = s.periods.filter((p) => +p >= state.ymin && +p <= state.ymax);
+    document.getElementById("chart-sub").textContent =
+      `Share of each domain in total domain exposure, by period${inRange.length ? `, ${inRange[0]}–${inRange[inRange.length - 1]}` : ""}`;
     document.getElementById("chart-caption").textContent =
       `Each bar splits the period's combined exposure to the five domains into percentages${s.firm ? "" : " (based on mean exposure across firms)"}. ` +
       `Periods are grouped so that 2020–21 (COVID-19) stands apart.`;

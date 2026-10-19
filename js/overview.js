@@ -13,8 +13,9 @@
   const pct = (v) => Math.round(v * 100) + "%";
 
   /* ---------- Hero ---------- */
-  document.getElementById("hero-firms").textContent = num(meta.n_firms);
-  document.getElementById("hero-ctry").textContent = meta.n_countries;
+  const ds = meta.dataset;
+  document.getElementById("hero-firms").textContent = num(ds.firms);
+  document.getElementById("hero-ctry").textContent = ds.countries;
   const shareSeries = years.map((y) => shareOf(y));
   document.getElementById("hero-stat").innerHTML = `
     <div class="big">${Math.round(shareOf(last) * 100)}<small>%</small></div>
@@ -23,9 +24,8 @@
     <p class="from">Up from ${pct(shareOf(first))} in ${first} · peak ${pct(Math.max(...shareSeries))} in ${years[shareSeries.indexOf(Math.max(...shareSeries))]}</p>`;
 
   document.getElementById("facts").innerHTML = [
-    [num(meta.n_firms), "firms"], [meta.n_countries, "countries"], [meta.n_industries, "industries"],
-    [num(meta.n_obs), "firm-year observations"], [`${meta.year_min}–${meta.year_max}`, "annual"],
-    [meta.quarter_max, "latest quarter"],
+    [num(ds.firms), "firms"], [ds.countries, "countries"], [meta.n_industries, "industries"],
+    [num(ds.firm_years), "firm-years"], [num(ds.firm_quarters), "firm-quarters"], [`${ds.first}–${ds.last}`, ""],
   ].map(([v, l]) => `<span><strong>${v}</strong> ${l}</span>`).join("");
 
   App.combobox({
@@ -80,11 +80,11 @@
     datasets: [{ label: "Any social topic", data: shareSeries.map((v) => (v == null ? null : v * 100)),
                  color: MEASURE_COLORS.social, width: 2.6, fill: true,
                  meta: years.map((y) => ({ nfirm: global[y].social.nfirm })) }],
-  }, { percent: true, yLabel: "% of firms", events: App.EVENTS, endLabels: false,
+  }, { percent: true, yLabel: "% of firms", endLabels: false,
        title: "Share of firms discussing any social topic", filename: "share_of_firms_discussing" });
 
   /* ---------- What: domain rows ---------- */
-  document.getElementById("domain-sub").textContent = `% of firms discussing each domain, ${first}–${last}`;
+  document.getElementById("domain-sub").textContent = `% of firms discussing each domain, annual ${first}–${last}`;
   document.getElementById("domain-list").innerHTML = DOMAIN_KEYS.map((m) => {
     const s = years.map((y) => shareOf(y, m));
     return `<a class="domain-row" href="${App.link("explore.html", { measures: m, stat: "share" })}">
