@@ -577,6 +577,8 @@ tbody tr:hover td, tbody tr:hover th { background: #fcfbf8; }
 .team-card:hover { text-decoration: none; color: var(--ink); box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border); }
 .team-card img { width: 112px; height: 112px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px var(--border); }
 .team-name { font-family: var(--font-heading); font-weight: 600; font-size: .98rem; }
+.team-aff { font-family: var(--font-heading); font-size: .8rem; color: var(--ink-2); line-height: 1.45; margin-top: -8px; max-width: 220px; }
+.team-link { margin-top: auto; }
 .team-link { font-family: var(--font-heading); font-size: .76rem; color: var(--orange-ink); }
 .team-card:hover .team-link { text-decoration: underline; }
 

@@ -206,7 +206,7 @@ const App = (() => {
         </footer>`;
       getMeta().then((m) => {
         const el = document.getElementById("footer-version");
-        if (el) el.textContent = `Data: ${m.data_version} · ${num(m.n_firms)} firms, ${m.year_min}–${m.year_max} · Site data built ${m.build_date}`;
+        if (el) el.textContent = `Data: ${m.data_version} · ${num(m.n_firms)} firms, ${m.year_min}–${m.year_max}`;
       }).catch(() => {});
     }
     document.querySelectorAll("[data-open-cite]").forEach((b) => b.addEventListener("click", openCite));
