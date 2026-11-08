@@ -152,8 +152,7 @@ const Charts = (() => {
     tools.querySelector('[data-act="cite"]').onclick = async () => {
       const meta = await App.getMeta();
       const title = (card.querySelector(".chart-title") || {}).textContent || document.title;
-      const text = `${title}. Source: ${App.SITE.shortCite}, "Unpacking Social Exposure," SSRN Working Paper 6770779; ` +
-        `data: ${meta.data_version}. ${window.location.href}`;
+      const text = `${title}. Source: ${App.SITE.chartSource}; data: ${meta.data_version}. ${window.location.href}`;
       App.copy(text, "Chart citation copied");
     };
     tools.querySelector('[data-act="link"]').onclick = () => App.copy(window.location.href, "Link copied");
@@ -281,7 +280,7 @@ const Charts = (() => {
           border: { display: false },
           title: { display: !!opts.yLabel, text: opts.yLabel || "", color: MUTED, font: { size: 11, weight: 500 } },
           ticks: { color: MUTED, font: { size: 11 }, padding: 6,
-                   callback: (v) => (opts.percent ? v + "%" : Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 })) },
+                   callback: (v) => (opts.percent ? v + "%" : Number(v).toLocaleString("en-US", { maximumFractionDigits: 3 })) },
         },
       },
     };
@@ -355,7 +354,7 @@ const Charts = (() => {
       canvas._chart = chart;
     }
     canvas.setAttribute("role", "img");
-    canvas.setAttribute("aria-label", `${opts.title || "Stacked bar chart"}: share of each domain by period.`);
+    canvas.setAttribute("aria-label", `${opts.title || "Stacked bar chart"}: share of each ${opts.part || "domain"} by period.`);
     const tableSets = datasets.map((d) => ({ label: d.label, data: d.data }));
     _toolbar(card, chart, { filename: opts.filename, csv: _csv(labels, tableSets, opts.filename, "Period") });
     _table(card, labels, tableSets, (v) => (v == null ? "–" : v.toFixed(1) + "%"));

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methods | Firm-Level Climate Change Exposure</title>
+  <meta name="description" content="How the climate change exposure, risk and sentiment measures are built, the three climate change topics, and dataset coverage.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Methods | Firm-Level Climate Change Exposure">
+  <meta property="og:description" content="Climate change exposure, risk and sentiment from earnings calls: topics, metrics and dataset coverage.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../favicon-climate.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=17">
+</head>
+<body data-section="climate">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <div class="page-wrapper no-sidebar">
+    <main class="main-content" id="main">
+      <p class="page-eyebrow">Data &amp; Methodology</p>
+      <h1>Methods</h1>
+      <p class="subtitle">Methodology, topics, metrics and dataset coverage.</p>
+
+      <div class="method-section">
+        <h2>Methodology</h2>
+        <p>The measures come from the transcripts of quarterly earnings calls held by listed firms. A <strong>machine learning keyword discovery algorithm</strong> (King, Lam and Roberts, 2017) starts from a short list of initial climate change bigrams and learns the other bigrams that call participants use when they discuss climate change. Seeded with topic bigrams, the same search yields three sets for <strong>opportunities</strong>, <strong>regulatory shocks</strong> and <strong>physical shocks</strong>. The three sets do not overlap and each is part of the overall set.</p>
+        <p>Exposure is computed per call as <strong>(climate change bigrams in the call / all bigrams in the call) &times; 1,000</strong>. Annual values average the firm's calls in the year.</p>
+        <p>For a detailed description of the methodology, please refer to the paper:</p>
+        <p class="cite-text" id="methods-cite" style="margin-left:0"></p>
+        <p>The full dataset with firm-year and firm-quarter level data can be downloaded from the <a href="data.html">Data</a> page.</p>
+      </div>
+
+      <div class="method-section">
+        <h2>Topics</h2>
+        <p>Every metric exists for climate change as a whole and for each of the three topics.</p>
+        <div class="table-container">
+          <table>
+            <thead><tr><th scope="col">Topic</th><th scope="col">What it captures</th><th scope="col">Example bigrams</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" class="tax-domain" data-measure="cc">Climate change (overall)</th><td>All climate change bigrams, covering opportunities and risks</td><td>battery power, new energy, environmental concern, extreme weather</td></tr>
+              <tr><th scope="row" class="tax-domain" data-measure="op">Opportunity</th><td>Opportunities from climate change, such as renewable energy and electric vehicles</td><td>wind power, solar energy, solar farm, carbon free, charge infrastructure, battery electric</td></tr>
+              <tr><th scope="row" class="tax-domain" data-measure="rg">Regulatory</th><td>Regulatory shocks, such as carbon taxes and cap and trade markets</td><td>carbon tax, air pollution, air quality, control regulation, environmental legislation</td></tr>
+              <tr><th scope="row" class="tax-domain" data-measure="ph">Physical</th><td>Physical shocks, such as sea level rise and natural hazards</td><td>natural hazard, sea level, wind speed, ice control</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="method-section">
+        <h2>Metrics</h2>
+        <div class="table-container">
+          <table>
+            <thead><tr><th scope="col">Metric</th><th scope="col">Definition (per 1,000 bigrams in the call)</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Exposure</th><td>Climate change bigrams</td></tr>
+              <tr><th scope="row">Risk</th><td>Climate change bigrams in sentences with the words risk or uncertainty or their synonyms</td></tr>
+              <tr><th scope="row">Positive sentiment</th><td>Climate change bigrams weighted by the positive tone words (Loughran and McDonald, 2011) in the same sentence</td></tr>
+              <tr><th scope="row">Negative sentiment</th><td>Climate change bigrams weighted by the negative tone words in the same sentence. The website shows it as a positive count</td></tr>
+              <tr><th scope="row">Net sentiment</th><td>Positive minus negative sentiment</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="method-section">
+        <h2>Coverage by Year</h2>
+        <p id="coverage-note"></p>
+        <div class="table-container scroll" id="coverage-year"></div>
+      </div>
+
+      <div class="method-section">
+        <h2>Coverage by Country (Top 30)</h2>
+        <div class="table-container scroll" id="coverage-country"></div>
+      </div>
+
+      <div class="method-section">
+        <h2>Coverage by Industry</h2>
+        <div class="table-container scroll" id="coverage-industry"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="../lib/chart.umd.min.js"></script>
+  <script src="../js/app.js?v=17"></script>
+  <script src="../js/charts.js?v=17"></script>
+  <script src="../js/climate/methods.js?v=17"></script>
+</body>
+</html>

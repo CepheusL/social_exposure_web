@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firm-Level Climate Change Exposure</title>
+  <meta name="description" content="How firms worldwide discuss climate change opportunities, regulation and physical threats on their earnings calls, 2001Q1–2024Q4.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Firm-Level Climate Change Exposure | Data explorer">
+  <meta property="og:description" content="How firms worldwide discuss climate change on their earnings calls, 2001Q1–2024Q4.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../favicon-climate.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=17">
+</head>
+<body data-section="climate">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <div class="page-wrapper no-sidebar">
+    <main class="main-content" id="main">
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">Data explorer · Earnings calls 2001Q1–2024Q4</p>
+          <h1 id="hero-title">Firm-Level Climate Change Exposure</h1>
+          <p class="hero-desc">How much attention do earnings calls pay to climate change, and do they discuss opportunities, regulation or physical threats? Explore measures for <span id="hero-firms">15,000+</span> firms in <span id="hero-ctry">90+</span> countries.</p>
+          <div class="hero-actions">
+            <a href="explore.html" class="btn btn-hero">Start exploring &rarr;</a>
+            <div class="search-box combo">
+              <label class="sr-only" for="hero-search">Find a company</label>
+              <input id="hero-search" type="search" placeholder="Find a company…">
+              <div class="dropdown-list" id="hero-search-list"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-stat" id="hero-stat" aria-live="polite"></div>
+      </section>
+      <div class="facts" id="facts"></div>
+
+      <section class="section" aria-labelledby="featured-title">
+        <div class="section-head">
+          <div>
+            <h2 id="featured-title">Featured companies</h2>
+            <p class="lede">Each line is a three-year average of climate change exposure, coloured by the firm's most-discussed topic. Each card has its own scale.</p>
+          </div>
+          <a class="section-link" href="firm.html">Search all firms</a>
+        </div>
+        <div class="tabs-row">
+          <div id="region-tabs"></div>
+          <div class="spark-legend" aria-hidden="true">
+            <span><i class="measure-line" style="width:20px;background:linear-gradient(90deg,#1baf7a 0 34%,#2a78d6 34% 67%,#eb6834 67%)"></i>Firm, by main topic</span>
+            <span><i class="measure-line" style="background:#c9c7bf"></i>Average firm</span>
+          </div>
+        </div>
+        <div class="featured-grid" id="featured-grid"></div>
+      </section>
+
+      <section class="section" aria-labelledby="insights-title">
+        <h2 id="insights-title" class="sr-only">Key facts</h2>
+        <div class="insights" id="insights"></div>
+      </section>
+
+      <section class="section" aria-labelledby="who-title">
+        <div class="section-head">
+          <div>
+            <h2 id="who-title">Who talks, and about what</h2>
+            <p class="lede">Four in five firms now mention climate change on their calls. Opportunities reach the most firms, then regulation.</p>
+          </div>
+          <a class="section-link" href="explore.html?stat=share">Explore shares</a>
+        </div>
+        <div class="split">
+          <figure class="chart-card" id="card-share">
+            <div class="chart-head">
+              <div>
+                <h3 class="chart-title">Firms discussing climate change</h3>
+                <p class="chart-sub">% of firms whose calls mention climate change in the year</p>
+              </div>
+              <div class="chart-tools"></div>
+            </div>
+            <div class="chart-body" style="height:330px"><canvas id="share-chart"></canvas></div>
+            <figcaption class="chart-foot">
+              <p class="chart-caption" id="share-caption"></p>
+              <button class="link-btn table-toggle" type="button">View as table</button>
+            </figcaption>
+            <div class="chart-table" hidden></div>
+          </figure>
+          <div class="chart-card" id="card-topics">
+            <div class="chart-head">
+              <div>
+                <h3 class="chart-title">By topic</h3>
+                <p class="chart-sub" id="topic-sub">% of firms discussing each topic</p>
+              </div>
+            </div>
+            <div class="domain-list" id="topic-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="ind-title">
+        <div class="section-head">
+          <div>
+            <h2 id="ind-title">Which industries talk most</h2>
+            <p class="lede">Utilities lead, followed by electrical equipment and car makers. Most of their topic talk is about opportunities.</p>
+          </div>
+          <a class="section-link" href="patterns.html#heatmap">Open the heatmap</a>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div>
+              <h3 class="chart-title">Most exposed industries</h3>
+              <p class="chart-sub" id="ind-sub"></p>
+            </div>
+          </div>
+          <div class="ind-legend" id="ind-legend" aria-hidden="true"></div>
+          <div class="domain-list" id="ind-list"></div>
+          <div class="chart-foot">
+            <p class="chart-caption" id="ind-caption"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="where-title">
+        <div class="section-head">
+          <div>
+            <h2 id="where-title">Around the world</h2>
+            <p class="lede" id="where-lede"></p>
+          </div>
+          <a class="section-link" href="patterns.html">Open the map</a>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div>
+              <h3 class="chart-title">Mean climate change exposure by country</h3>
+              <p class="chart-sub">Climate change bigrams per 1,000 bigrams in earnings calls</p>
+            </div>
+          </div>
+          <div class="dumbbell" id="dumbbell"></div>
+          <div class="chart-foot">
+            <p class="chart-caption" id="dumbbell-caption"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="quick-title">
+        <div class="section-head"><h2 id="quick-title">Start exploring</h2></div>
+        <div class="card-grid" id="quick-links"></div>
+      </section>
+
+      <section class="section" aria-labelledby="team-title">
+        <div class="section-head"><h2 id="team-title">Author team</h2></div>
+        <div class="team-grid">
+          <a class="team-card" href="https://sites.google.com/view/zachariassautner" target="_blank" rel="noopener">
+            <img src="../img/team/sautner.jpg" alt="Portrait of Zacharias Sautner" width="112" height="112" loading="lazy">
+            <span class="team-name">Zacharias Sautner</span>
+            <span class="team-aff">University of Zurich &amp; Swiss Finance Institute</span>
+            <span class="team-link">Homepage ↗</span>
+          </a>
+          <a class="team-card" href="https://www.laurencevanlent.org/" target="_blank" rel="noopener">
+            <img src="../img/team/vanlent.jpg" alt="Portrait of Laurence van Lent" width="112" height="112" loading="lazy">
+            <span class="team-name">Laurence van Lent</span>
+            <span class="team-aff">Frankfurt School of Finance &amp; Management</span>
+            <span class="team-link">Homepage ↗</span>
+          </a>
+          <a class="team-card" href="https://www.frankfurt-school.de/en/research-and-faculty/faculty/faculty-directory/grigory-vilkov" target="_blank" rel="noopener">
+            <span class="team-initials" role="img" aria-label="Grigory Vilkov">GV</span>
+            <span class="team-name">Grigory Vilkov</span>
+            <span class="team-aff">Frankfurt School of Finance &amp; Management</span>
+            <span class="team-link">Homepage ↗</span>
+          </a>
+          <a class="team-card" href="https://ruishenzhang.com/" target="_blank" rel="noopener">
+            <img src="../img/team/zhang.jpg" alt="Portrait of Ruishen Zhang" width="112" height="112" loading="lazy">
+            <span class="team-name">Ruishen Zhang</span>
+            <span class="team-aff">The University of Hong Kong</span>
+            <span class="team-link">Homepage ↗</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="citation-block" aria-labelledby="cite-title">
+        <div>
+          <h2 id="cite-title">Cite the data</h2>
+          <p id="cite-text"></p>
+        </div>
+        <div class="citation-actions">
+          <button type="button" class="btn btn-sm btn-primary" id="copy-cite">Copy citation</button>
+          <button type="button" class="btn btn-sm" id="copy-data">Copy dataset citation</button>
+          <button type="button" class="btn btn-sm" id="copy-bib">Copy BibTeX</button>
+          <a class="btn btn-sm" id="paper-link" target="_blank" rel="noopener">Paper in the Journal of Finance</a>
+          <a class="btn btn-sm" id="data-link">Download the data</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="../lib/chart.umd.min.js"></script>
+  <script src="../js/app.js?v=17"></script>
+  <script src="../js/charts.js?v=17"></script>
+  <script src="../js/climate/overview.js?v=17"></script>
+</body>
+</html>

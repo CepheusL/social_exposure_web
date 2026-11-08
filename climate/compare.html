@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare | Firm-Level Climate Change Exposure</title>
+  <meta name="description" content="Compare climate change exposure, risk and sentiment on earnings calls across countries, industries or firms, 2001Q1–2024Q4.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Compare | Firm-Level Climate Change Exposure">
+  <meta property="og:description" content="Compare how countries, industries and firms discuss climate change on their earnings calls.">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../favicon-climate.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=17">
+</head>
+<body data-section="climate">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <div class="page-wrapper">
+    <aside class="sidebar" id="sidebar" aria-label="Filters">
+      <div class="filter-group">
+        <span class="filter-label">Compare</span>
+        <div id="type-ctrl"></div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="entity-input" id="entity-label">Countries</label>
+        <div class="chip-row" id="entity-chips"></div>
+        <div class="combo">
+          <input type="search" id="entity-input" placeholder="Search and add…">
+          <div class="dropdown-list" id="entity-list"></div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="ctrl-topic">Topic</label>
+        <select id="ctrl-topic"></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="ctrl-metric">Metric</label>
+        <select id="ctrl-metric"></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="ctrl-stat">Statistic</label>
+        <select id="ctrl-stat"></select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Years</span>
+        <div id="year-ctrl"></div>
+      </div>
+      <div class="filter-actions">
+        <a class="btn btn-sm" href="compare.html">Reset</a>
+        <button type="button" class="btn btn-sm" id="copy-link">Copy link</button>
+      </div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <p class="page-eyebrow">Side by side</p>
+      <h1>Compare</h1>
+      <p class="subtitle">Compare up to eight countries, industries or firms on one topic and metric.</p>
+
+      <div id="notice"></div>
+
+      <div class="view-controls" role="group" aria-label="Chart options">
+        <div class="ctrl"><span class="ctrl-label">Frequency</span><div id="ctrl-freq"></div></div>
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-scale">Scale</label>
+          <select id="ctrl-scale">
+            <option value="level">Level</option>
+            <option value="yoy">Change from a year earlier</option>
+          </select>
+        </div>
+      </div>
+
+      <figure class="chart-card" id="card-main">
+        <div class="chart-head">
+          <div>
+            <h2 class="chart-title" id="chart-title">Compare</h2>
+            <p class="chart-sub" id="chart-sub"></p>
+          </div>
+          <div class="chart-tools"></div>
+        </div>
+        <div class="chart-body" id="chart-body" style="height:430px"><canvas id="compare-chart"></canvas></div>
+        <figcaption class="chart-foot">
+          <p class="chart-caption" id="chart-caption"></p>
+          <button class="link-btn table-toggle" type="button">View as table</button>
+        </figcaption>
+        <div class="chart-table" hidden></div>
+      </figure>
+
+      <div class="table-container" id="summary"></div>
+    </main>
+  </div>
+
+  <button class="drawer-toggle" id="drawer-toggle" type="button">Filters</button>
+  <div id="site-footer"></div>
+
+  <script src="../lib/chart.umd.min.js"></script>
+  <script src="../js/app.js?v=17"></script>
+  <script src="../js/charts.js?v=17"></script>
+  <script src="../js/climate/compare.js?v=17"></script>
+</body>
+</html>

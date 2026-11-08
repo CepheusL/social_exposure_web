@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ranking | Firm-Level Climate Change Exposure</title>
+  <meta name="description" content="League tables of firms, countries and industries by climate change exposure, risk and sentiment on earnings calls, by year or period.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Rankings | Firm-Level Climate Change Exposure">
+  <meta property="og:description" content="Which firms, countries and industries discuss climate change most on their earnings calls?">
+  <meta property="og:image" content="og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../favicon-climate.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css?v=17">
+</head>
+<body data-section="climate">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <div class="page-wrapper no-sidebar">
+    <main class="main-content" id="main">
+      <p class="page-eyebrow">League tables</p>
+      <h1>Rankings</h1>
+      <p class="subtitle">Rank firms, countries or industries on any topic and metric, by year or over a period. Firm rankings use a multi-year average by default, which smooths out single calls.</p>
+
+      <button type="button" class="btn btn-sm controls-toggle" id="controls-toggle" aria-controls="rank-controls" aria-expanded="false" style="margin-bottom:12px">Filters</button>
+      <div class="view-controls collapsible" id="rank-controls" role="group" aria-label="Ranking options">
+        <div class="ctrl"><span class="ctrl-label">Rank</span><div id="ctrl-entity"></div></div>
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-topic">Topic</label><select id="ctrl-topic"></select></div>
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-metric">Metric</label><select id="ctrl-metric"></select></div>
+        <div class="ctrl"><span class="ctrl-label">Mode</span><div id="ctrl-mode"></div></div>
+        <div class="ctrl" id="year-ctrl"><label class="ctrl-label" for="ctrl-year">Year</label><select id="ctrl-year"></select></div>
+        <div class="ctrl" id="period-ctrl" hidden><span class="ctrl-label">Period</span><div id="period-range"></div></div>
+        <div class="ctrl"><label class="ctrl-label" for="ctrl-direction">Show</label>
+          <select id="ctrl-direction" style="min-width:96px"><option value="top">Highest</option><option value="bottom">Lowest</option></select>
+          <label class="sr-only" for="ctrl-topn">Number of rows</label>
+          <input type="number" id="ctrl-topn" min="5" max="500" step="5">
+        </div>
+        <div class="ctrl" id="min-ctrl"><label class="ctrl-label" for="ctrl-min" id="min-label">Min firms</label><input type="number" id="ctrl-min" min="0"></div>
+      </div>
+
+      <div class="ranking-toolbar">
+        <div class="combo search-box light">
+          <label class="sr-only" for="search-entity">Find in ranking</label>
+          <input type="search" id="search-entity" placeholder="Find in this ranking…">
+          <div class="dropdown-list" id="search-list"></div>
+        </div>
+        <button type="button" class="btn btn-sm" id="btn-csv">CSV</button>
+        <button type="button" class="btn btn-sm" id="btn-png">PNG</button>
+        <button type="button" class="btn btn-sm" id="btn-link">Copy link</button>
+      </div>
+
+      <div class="table-container" id="ranking-wrap" style="max-height:none;overflow:visible">
+        <div class="ranking-summary" id="ranking-summary" aria-live="polite"></div>
+        <div style="overflow-x:auto">
+          <table id="ranking-table">
+            <thead id="ranking-head"></thead>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
+        <div class="ranking-more" id="ranking-more"></div>
+      </div>
+      <p class="chart-caption" id="ranking-caption" style="margin-top:10px"></p>
+    </main>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="../lib/chart.umd.min.js"></script>
+  <script src="../js/app.js?v=17"></script>
+  <script src="../js/charts.js?v=17"></script>
+  <script src="../js/climate/ranking.js?v=17"></script>
+</body>
+</html>

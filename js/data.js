@@ -7,6 +7,20 @@
   const v = encodeURIComponent((await App.getMeta()).build_id || "");
   const fileUrl = (path) => `${App.BASE_PATH}/${path}?v=${v}`;
 
+  /** Climate files: the score columns as a topic x metric grid with plain-word labels, then the other columns. */
+  function scoreGrid(f) {
+    const g = f.score_grid;
+    const col = (t, m) => g.pattern.replace("{t}", t).replace("{m}", m);
+    return `<p class="dl-label">Scores (per bigram; ×1,000 on the site)</p>
+      <div class="dl-grid"><table>
+        <thead><tr><th scope="col">Metric</th>${g.topics.map(([, l]) => `<th scope="col">${esc(l.replace(/^Climate change \(overall\)$/, "Overall"))}</th>`).join("")}</tr></thead>
+        <tbody>${g.metrics.map(([m, ml]) => `<tr><th scope="row">${esc(ml)}</th>${g.topics.map(([t]) =>
+          `<td><code>${esc(col(t, m))}</code></td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div>
+      <p class="dl-label">Other columns</p>
+      <div class="dl-cols">${f.other_columns.map(([c, l]) => `<span class="dl-col"><code>${esc(c)}</code> ${esc(l)}</span>`).join("")}</div>`;
+  }
+
   /* ---------- Download cards ---------- */
   document.getElementById("downloads").innerHTML = manifest.files.map((f) => `
     <article class="download-card">
@@ -25,8 +39,8 @@
         <div><dt>Firms</dt><dd>${num(f.firms)}</dd></div>
         <div><dt>Countries</dt><dd>${num(f.countries)}</dd></div>
       </dl>
-      <p class="dl-label">Columns</p>
-      <div class="dl-cols">${f.columns.map((c) => `<code>${esc(c)}</code>`).join("")}</div>
+      ${f.score_grid ? scoreGrid(f) : `<p class="dl-label">Columns</p>
+      <div class="dl-cols">${f.columns.map((c) => `<code>${esc(c)}</code>`).join("")}</div>`}
       <div class="dl-foot">
         <a class="btn btn-primary" href="${fileUrl(f.file)}" download>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
@@ -38,6 +52,8 @@
 
   document.getElementById("copy-cite").onclick = () => App.copy(App.SITE.citation, "Citation copied");
   document.getElementById("copy-bib").onclick = () => App.copy(App.SITE.bibtex, "BibTeX copied");
+  const dataBtn = document.getElementById("copy-data");
+  if (dataBtn && App.SITE.dataCitation) dataBtn.onclick = () => App.copy(App.SITE.dataCitation, "Dataset citation copied");
   const rl = document.getElementById("readme-link");
   rl.href = fileUrl(manifest.readme);
   rl.textContent = `Download ReadMe.txt (${mb(manifest.readme_bytes)})`;

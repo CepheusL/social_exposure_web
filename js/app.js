@@ -1,12 +1,24 @@
 /* ============ app.js — shared core: constants, site chrome, data access, UI helpers ============ */
 
 const App = (() => {
+  /* ---------- Sections: each page declares <body data-section="social|climate"> ---------- */
+  const SECTION = document.body && document.body.dataset.section === "climate" ? "climate" : "social";
+  const IS_CLIMATE = SECTION === "climate";
+  const ROOT = IS_CLIMATE ? "../" : "";   // climate pages live in climate/
+  const SECTIONS = [
+    { key: "social", label: "Social Exposure", dir: "" },
+    { key: "climate", label: "Climate Change Exposure", dir: "climate/" },
+  ];
+
   /* ---------- Site constants (single source of truth) ---------- */
-  const SITE = {
+  const SOCIAL_SITE = {
     name: "Unpacking Social Exposure",
     paperUrl: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6770779",
+    paperLabel: "Paper on SSRN",
     dataUrl: "data.html",
     shortCite: "Liu, Sautner, van Lent & Zhang (2026)",
+    footerCite: "Liu, Sautner, van Lent &amp; Zhang (2026). <em>Unpacking Social Exposure</em>. SSRN Working Paper 6770779.",
+    chartSource: 'Liu, Sautner, van Lent & Zhang (2026), "Unpacking Social Exposure," SSRN Working Paper 6770779',
     citation:
       "Liu, Mingyang and Sautner, Zacharias and van Lent, Laurence and Zhang, Ruishen, Unpacking Social Exposure " +
       "(May 15, 2026). TRR 266 Accounting for Transparency Working Paper Series No. 235, HKU Jockey Club Enterprise " +
@@ -26,23 +38,72 @@ const App = (() => {
 }`,
   };
 
+  const CLIMATE_SITE = {
+    name: "Firm-Level Climate Change Exposure",
+    paperUrl: "https://doi.org/10.1111/jofi.13219",
+    paperLabel: "Paper in the Journal of Finance",
+    dataUrl: "data.html",
+    shortCite: "Sautner, van Lent, Vilkov & Zhang (2023)",
+    footerCite: "Sautner, van Lent, Vilkov &amp; Zhang (2023). <em>Firm-Level Climate Change Exposure</em>. Journal of Finance 78(3), 1449–1498.",
+    chartSource: 'Sautner, van Lent, Vilkov & Zhang (2023), "Firm-Level Climate Change Exposure," Journal of Finance 78(3)',
+    citation:
+      'Sautner, Zacharias, Laurence van Lent, Grigory Vilkov, and Ruishen Zhang. "Firm-Level Climate Change Exposure." ' +
+      "The Journal of Finance 78, no. 3 (2023): 1449–1498. https://doi.org/10.1111/jofi.13219",
+    dataCitation:
+      'Sautner, Zacharias, Laurence van Lent, Grigory Vilkov, and Ruishen Zhang. "Data for ‘Firm-Level Climate Change Exposure’." ' +
+      "https://cepheusl.github.io/social_exposure_web/climate/data.html",
+    bibtex:
+`@article{sautner2023firm,
+  title   = {Firm-Level Climate Change Exposure},
+  author  = {Sautner, Zacharias and van Lent, Laurence and Vilkov, Grigory and Zhang, Ruishen},
+  journal = {The Journal of Finance},
+  volume  = {78},
+  number  = {3},
+  pages   = {1449--1498},
+  year    = {2023},
+  doi     = {10.1111/jofi.13219}
+}`,
+  };
+  const SITE = IS_CLIMATE ? CLIMATE_SITE : SOCIAL_SITE;
+
   const NAV = [
     ["index.html", "Overview"], ["explore.html", "Explore"], ["compare.html", "Compare"],
     ["firm.html", "Firms"], ["ranking.html", "Ranking"], ["patterns.html", "Patterns"], ["methods.html", "Methods"], ["data.html", "Data"],
   ];
 
-  /* Measures: order matters (adjacent colours are validated for colour-vision deficiency in this order) */
-  const MEASURES = {
+  /* Social measures: order matters (adjacent colours are validated for colour-vision deficiency in this order) */
+  const SOCIAL_MEASURES = {
     emp: "Employee Welfare", dei: "DEI", stk: "Stakeholder Outreach",
     eth: "Ethical Commitment", crisis: "Crisis Response", social: "Overall Social Exposure",
   };
-  const MEASURE_KEYS = ["emp", "dei", "stk", "eth", "crisis", "social"];
-  const DOMAIN_KEYS = ["emp", "dei", "stk", "eth", "crisis"];
-  const MEASURE_COLORS = {
+  const SOCIAL_COLORS = {
     emp: "#2a78d6", dei: "#eb6834", stk: "#1baf7a", eth: "#eda100", crisis: "#e87ba4", social: "#141413",
   };
 
-  const STATS = {
+  /* Climate: four topics (overall plus three topics) x five metrics. Data keys are `${topic}_${metric}`. */
+  const TOPICS = { cc: "Climate change", op: "Opportunity", rg: "Regulatory", ph: "Physical" };
+  const TOPIC_KEYS = ["cc", "op", "rg", "ph"];
+  const TOPIC_COLORS = { cc: "#141413", op: "#1baf7a", rg: "#2a78d6", ph: "#eb6834" };
+  const METRICS = { expo: "Exposure", risk: "Risk", pos: "Positive sentiment", neg: "Negative sentiment", sent: "Net sentiment" };
+  const METRIC_KEYS = ["expo", "risk", "pos", "neg", "sent"];
+  const METRIC_COLORS = { expo: "#141413", risk: "#e87ba4", pos: "#eda100", neg: "#6250d6", sent: "#141413" };
+  const CLIMATE_KEYS = TOPIC_KEYS.flatMap((t) => METRIC_KEYS.map((m) => `${t}_${m}`));
+  /** Plain-word label of one climate measure, e.g. "Opportunity exposure" or "Climate change risk". */
+  const measureLabel = (t, m) => `${TOPICS[t]} ${METRICS[m].toLowerCase()}`;
+
+  const MEASURES = IS_CLIMATE ? TOPICS : SOCIAL_MEASURES;
+  const MEASURE_KEYS = IS_CLIMATE ? TOPIC_KEYS : ["emp", "dei", "stk", "eth", "crisis", "social"];
+  const DOMAIN_KEYS = IS_CLIMATE ? ["op", "rg", "ph"] : ["emp", "dei", "stk", "eth", "crisis"];
+  const MEASURE_COLORS = IS_CLIMATE ? TOPIC_COLORS : SOCIAL_COLORS;
+
+  const STATS = IS_CLIMATE ? {
+    mean:     { label: "Mean" },
+    median:   { label: "Median" },
+    p75:      { label: "75th percentile" },
+    p90:      { label: "90th percentile" },
+    share:    { label: "Share of firms discussing", pct: true },
+    mean_pos: { label: "Mean among firms discussing" },
+  } : {
     mean:     { label: "Mean",                        axis: "Mean exposure" },
     median:   { label: "Median",                      axis: "Median exposure" },
     p75:      { label: "75th percentile",             axis: "75th percentile of exposure" },
@@ -51,7 +112,8 @@ const App = (() => {
     mean_pos: { label: "Mean among firms discussing", axis: "Mean exposure among firms discussing" },
   };
   const STAT_KEYS = Object.keys(STATS);
-  const UNIT = "sentences per 1,000";
+  const STAT_INDEX = { mean: 0, median: 1, p75: 2, p90: 3, share: 4, mean_pos: 5 };  // climate aggregate arrays
+  const UNIT = IS_CLIMATE ? "per 1,000 bigrams" : "sentences per 1,000";
 
   /* ---------- Small utilities ---------- */
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -65,6 +127,12 @@ const App = (() => {
     if (v == null || isNaN(v)) return "–";
     if (STATS[stat] && STATS[stat].pct) return (v * 100).toFixed(digits ?? 0) + "%";
     return Number(v).toFixed(digits ?? 2);
+  }
+  /** Number with enough decimals for small climate values (0.014 stays readable). */
+  function dec(v) {
+    if (v == null || isNaN(v)) return "–";
+    const a = Math.abs(v);
+    return Number(v).toFixed(a !== 0 && a < 0.1 ? 3 : 2);
   }
 
   /* Base path for GitHub Pages project sites */
@@ -150,12 +218,15 @@ const App = (() => {
           <h2 id="cite-dialog-title">Cite this work</h2>
           <button type="button" class="icon-btn" data-close aria-label="Close">&times;</button>
         </div>
-        <p class="dialog-label">Citation</p>
+        <p class="dialog-label">${SITE.dataCitation ? "Paper" : "Citation"}</p>
         <p class="cite-text">${esc(SITE.citation)}</p>
         <div class="dialog-actions">
           <button type="button" class="btn btn-sm" data-copy="cite">Copy citation</button>
-          <a class="btn btn-sm" href="${SITE.paperUrl}" target="_blank" rel="noopener">Open paper on SSRN</a>
+          <a class="btn btn-sm" href="${SITE.paperUrl}" target="_blank" rel="noopener">Open ${esc(SITE.paperLabel.replace(/^Paper/, "paper"))}</a>
         </div>
+        ${SITE.dataCitation ? `<p class="dialog-label">Dataset</p>
+        <p class="cite-text">${esc(SITE.dataCitation)}</p>
+        <div class="dialog-actions"><button type="button" class="btn btn-sm" data-copy="data">Copy dataset citation</button></div>` : ""}
         <p class="dialog-label">BibTeX</p>
         <pre class="cite-bib">${esc(SITE.bibtex)}</pre>
         <div class="dialog-actions"><button type="button" class="btn btn-sm" data-copy="bib">Copy BibTeX</button></div>`;
@@ -163,6 +234,8 @@ const App = (() => {
       dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
       dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
       dlg.querySelector('[data-copy="cite"]').addEventListener("click", () => copy(SITE.citation, "Citation copied"));
+      const dataBtn = dlg.querySelector('[data-copy="data"]');
+      if (dataBtn) dataBtn.addEventListener("click", () => copy(SITE.dataCitation, "Dataset citation copied"));
       dlg.querySelector('[data-copy="bib"]').addEventListener("click", () => copy(SITE.bibtex, "BibTeX copied"));
     }
     dlg.showModal();
@@ -171,18 +244,27 @@ const App = (() => {
   /* ---------- Site chrome (header + footer injected on every page) ---------- */
   function renderChrome() {
     const page = window.location.pathname.split("/").pop() || "index.html";
+    const current = SECTIONS.find((s) => s.key === SECTION);
+    const sectionLinks = SECTIONS.map((s) => `<a href="${ROOT}${s.dir}index.html"${s.key === SECTION
+      ? ' class="active" aria-current="true"' : ""}>${s.label}</a>`).join("");
     const header = document.getElementById("site-header");
     if (header) {
       header.outerHTML = `
         <header class="navbar">
-          <a class="brand" href="index.html">${SITE.name}</a>
-          <nav id="site-nav" aria-label="Main">
-            ${NAV.map(([href, label]) =>
-              `<a href="${href}"${href === page ? ' class="active" aria-current="page"' : ""}>${label}</a>`).join("")}
-          </nav>
-          <button class="hamburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
-            <span></span><span></span><span></span>
-          </button>
+          <div class="nav-top">
+            <a class="brand" href="index.html" aria-label="${esc(current.label)} overview"><span class="brand-text">${esc(current.label)}</span></a>
+            <nav class="section-nav" aria-label="Datasets">${sectionLinks}</nav>
+            <button class="hamburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+          <div class="nav-sub" id="site-nav">
+            <nav class="section-nav section-nav-mobile" aria-label="Datasets (menu)">${sectionLinks}</nav>
+            <nav class="page-nav" aria-label="${esc(current.label)} pages">
+              ${NAV.map(([href, label]) =>
+                `<a href="${href}"${href === page ? ' class="active" aria-current="page"' : ""}>${label}</a>`).join("")}
+            </nav>
+          </div>
         </header>`;
     }
     const footer = document.getElementById("site-footer");
@@ -190,7 +272,7 @@ const App = (() => {
       footer.outerHTML = `
         <footer class="site-footer">
           <div class="footer-inner">
-            <p class="footer-cite">${esc(SITE.shortCite)}. <em>Unpacking Social Exposure</em>. SSRN Working Paper 6770779.</p>
+            <p class="footer-cite">${SITE.footerCite}</p>
             <nav class="footer-links" aria-label="Footer">
               <a href="${SITE.paperUrl}" target="_blank" rel="noopener">Paper</a>
               <a href="${SITE.dataUrl}">Data</a>
@@ -248,7 +330,7 @@ const App = (() => {
   async function getFirms() {
     if (!_firms) {
       const d = await loadJSON("firms.json");
-      _firms = d.rows.map((r) => ({ id: r[0], name: r[1], country: r[2], industry: r[3], first: r[4], last: r[5] }));
+      _firms = d.rows.map((r) => ({ id: r[0], name: r[1], country: r[2], industry: r[3], first: r[4], last: r[5], gvkey: r[6] || null }));
       _firmMap = new Map(_firms.map((f) => [f.id, f]));
     }
     return _firms;
@@ -271,17 +353,29 @@ const App = (() => {
     const chunk = await loadJSON(`${freq === "quarterly" ? "firm_q" : "firm"}/chunk_${c}.json`);
     return chunk[id] || null;
   }
-  /** Firm record -> {period: {measure: value}} so firms and aggregates share one shape. */
+  /** Firm record -> {period: {measure: value}} so firms and aggregates share one shape.
+      Climate records omit net sentiment; it equals positive minus negative sentiment. */
   function firmToPeriods(rec, freq = "annual") {
     const out = {};
     if (!rec) return out;
     const keys = freq === "quarterly" ? rec.q : rec.years;
+    const mk = IS_CLIMATE ? CLIMATE_KEYS : MEASURE_KEYS;
     keys.forEach((p, i) => {
       const row = {};
-      for (const m of MEASURE_KEYS) row[m] = rec[m] ? rec[m][i] : null;
+      for (const m of mk) row[m] = rec[m] ? rec[m][i] : null;
+      if (IS_CLIMATE) for (const t of TOPIC_KEYS) {
+        const pos = row[`${t}_pos`], neg = row[`${t}_neg`];
+        row[`${t}_sent`] = pos == null || neg == null ? null : Math.round((pos - neg) * 1000) / 1000;
+      }
       out[String(p)] = row;
     });
     return out;
+  }
+  /** Climate aggregate cell: row = agg[period]; returns the statistic for one measure key. */
+  function aggVal(row, key, stat = "mean") {
+    if (!row || !row[key]) return null;
+    const v = row[key][STAT_INDEX[stat]];
+    return v === undefined ? null : v;
   }
 
   /* ---------- UI helpers ---------- */
@@ -359,15 +453,20 @@ const App = (() => {
     await lookups();
     const ql = query.toLowerCase();
     const isId = /^\d+$/.test(ql);
+    const isIsin = IS_CLIMATE && /^[a-z]{2}[a-z0-9]*\d[a-z0-9]*$/.test(ql) && ql.length >= 4;
     const hits = [];
     for (const f of firms) {
-      const s = isId ? (f.id.startsWith(ql) ? 0 : -1) : matchScore(f.name, ql);
+      let s;
+      if (isId) s = (IS_CLIMATE ? (f.gvkey || "") : f.id).startsWith(ql) ? 0 : -1;
+      else if (isIsin && f.id.toLowerCase().startsWith(ql)) s = 0;
+      else s = matchScore(f.name, ql);
       if (s >= 0) hits.push([s, f]);
     }
     hits.sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name));
     return hits.slice(0, limit).map(([, f]) => ({
       id: f.id, label: f.name,
-      sub: [countryName(f.country), industryShort(f.industry), `${f.first}–${f.last}`].filter(Boolean).join(" · "),
+      sub: [countryName(f.country), industryShort(f.industry), `${f.first}–${f.last}`, IS_CLIMATE ? f.id : null]
+        .filter(Boolean).join(" · "),
     }));
   }
   async function searchCountries(query) {
@@ -448,7 +547,7 @@ const App = (() => {
         <span class="firm-card-name">${esc(p.name)}</span>
         <span class="firm-card-ctry" title="${esc(countryName(p.country))}">${esc(p.country || "")}</span>
       </div>
-      ${Charts.spark(p.social_3y, { color, ref, yMax, h: 58, fill: true })}
+      ${Charts.spark(p.spark || p.social_3y, { color, ref, yMax, h: 58, fill: true })}
       <div class="firm-card-foot">
         <span class="tag"><span class="measure-dot" style="background:${color}"></span><span>${esc(MEASURES[p.dominant] || "–")}</span></span>
         <span>Peak ${p.peak_year}</span>
@@ -457,7 +556,7 @@ const App = (() => {
   }
 
   /** Recently viewed firms (per-viewer convenience; storage may be unavailable). */
-  const RECENT_KEY = "use_recent_firms";
+  const RECENT_KEY = IS_CLIMATE ? "cce_recent_firms" : "use_recent_firms";
   function recentFirms() {
     try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]").filter((x) => typeof x === "string"); } catch { return []; }
   }
@@ -471,12 +570,14 @@ const App = (() => {
   renderChrome();
 
   return {
+    SECTION, IS_CLIMATE, ROOT,
     SITE, MEASURES, MEASURE_KEYS, DOMAIN_KEYS, MEASURE_COLORS, STATS, STAT_KEYS, UNIT, BASE_PATH,
-    esc, num, fmt, clamp, periodYear,
+    TOPICS, TOPIC_KEYS, TOPIC_COLORS, METRICS, METRIC_KEYS, METRIC_COLORS, CLIMATE_KEYS, measureLabel,
+    esc, num, fmt, dec, clamp, periodYear,
     loadJSON, param, paramInt, paramList, setParams, link,
     copy, toast, openCite, initDrawer, busy, notice,
     getMeta, getCountries, getIndustries, getFirms, getFirm, lookups, countryName, industryName, industryShort,
-    loadAgg, loadFirm, firmToPeriods,
+    loadAgg, loadFirm, firmToPeriods, aggVal,
     combobox, searchFirms, searchCountries, searchIndustries, yearRange, segmented,
     firmCard, recentFirms, rememberFirm,
   };
