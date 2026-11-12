@@ -24,7 +24,11 @@ from earnings conference calls. The live site is served by GitHub Pages at
   or move it.
 - Header and footer are injected at runtime by `js/app.js`. Which paper's chrome
   and citation load depends on `<body data-section="...">` (`social` by default,
-  `climate` under `/climate/`, `home` on the hub).
+  `climate` under `/climate/`, `home` on the hub). Each section also carries its
+  own color palette via CSS variable overrides in `css/style.css`: orange
+  (social, the default tokens), green (`[data-section="climate"]`), slate blue
+  (`[data-section="home"]`). The hub's project cards pin their project's palette
+  so they keep the orange/green identity.
 - Charts use the vendored `lib/chart.umd.min.js` (Chart.js UMD). No CDN, no npm.
 - CSS/JS changes are cache-busted with a `?v=N` query on `<link>`/`<script>` tags
   (currently `v=17`). **When you edit `css/style.css` or shared JS, bump the

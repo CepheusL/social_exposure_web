@@ -62,6 +62,25 @@
   --highlight-bg: #e8f5ee;
 }
 
+/* Hub landing page: slate-blue accent and a deep indigo hero, distinct from both projects
+   (the project cards pin their own orange/green accents) */
+[data-section="home"] {
+  --orange:       #5568b8;
+  --orange-dim:   #e7eaf6;
+  --orange-ink:   #3a4a8f;
+  --orange-deep:  #2c3766;
+  --navy-1:       #15142b;
+  --navy-2:       #232650;
+  --navy-3:       #384274;
+  --hero-accent:  #b3c2ef;
+  --hero-glow:    rgba(85,104,184,0.30);
+  --hero-btn-shadow: rgba(85,104,184,0.35);
+  --hero-btn-hover:  #6a7ec9;
+  --focus-glow:   rgba(85,104,184,0.18);
+  --accent-border: #c7cfee;
+  --highlight-bg: #eef1fa;
+}
+
 html { font-size: 15px; scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
@@ -104,6 +123,7 @@ code, pre { font-family: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation M
   background: url("../favicon.svg") center/contain no-repeat;
 }
 [data-section="climate"] .navbar .brand::before { background-image: url("../favicon-climate.svg"); }
+[data-section="home"] .navbar .brand::before { background-image: url("../favicon-hub.svg"); }
 .navbar .brand:hover { text-decoration: none; color: var(--ink); }
 .brand-text { display: none; overflow: hidden; text-overflow: ellipsis; }
 .navbar nav { display: flex; gap: 2px; }
@@ -793,6 +813,9 @@ tbody tr:hover td, tbody tr:hover th { background: #fcfbf8; }
   border-radius: var(--radius-lg); padding: 26px 26px 22px;
   box-shadow: var(--shadow-sm); color: var(--ink);
   transition: box-shadow var(--t), transform var(--t), border-color var(--t);
+  /* pin the Social Exposure palette: the card is a project brand, not hub chrome */
+  --orange: #d97757; --orange-ink: #a9532f; --orange-dim: #f6e7df;
+  --accent-border: #ecc9b8; --focus-glow: rgba(217,119,87,0.16);
 }
 .project-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .project-card.proj-climate {
