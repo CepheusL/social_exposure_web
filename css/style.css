@@ -120,10 +120,8 @@ code, pre { font-family: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation M
 }
 .navbar .brand::before {
   content: ""; width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
-  background: url("../favicon.svg") center/contain no-repeat;
+  background: url("../favicon-hub.svg") center/contain no-repeat;
 }
-[data-section="climate"] .navbar .brand::before { background-image: url("../favicon-climate.svg"); }
-[data-section="home"] .navbar .brand::before { background-image: url("../favicon-hub.svg"); }
 .navbar .brand:hover { text-decoration: none; color: var(--ink); }
 .brand-text { display: none; overflow: hidden; text-overflow: ellipsis; }
 .navbar nav { display: flex; gap: 2px; }

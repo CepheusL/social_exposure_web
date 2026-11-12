@@ -252,13 +252,14 @@ const NAV = [
     const current = SECTIONS.find((s) => s.key === SECTION) || { key: "home", label: HOME_NAME, dir: "", landing: "index.html" };
     const sectionLinks = SECTIONS.map((s) => `<a href="${ROOT}${s.dir}${s.landing}"${s.key === SECTION
       ? ' class="active" aria-current="true"' : ""}>${s.label}</a>`).join("");
-    const brandHref = IS_HOME ? "index.html" : `${ROOT}${current.landing}`;
+    /* Top-left is the site logo: it carries the hub identity and always links home. */
+    const brandHref = `${ROOT}index.html`;
     const header = document.getElementById("site-header");
     if (header) {
       header.outerHTML = `
         <header class="navbar">
           <div class="nav-top">
-            <a class="brand" href="${brandHref}" aria-label="${esc(current.label)} overview"><span class="brand-text">${esc(current.label)}</span></a>
+            <a class="brand" href="${brandHref}" aria-label="${esc(HOME_NAME)} home"><span class="brand-text">${esc(HOME_NAME)}</span></a>
             <nav class="section-nav" aria-label="Datasets">${sectionLinks}</nav>
             <button class="hamburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
               <span></span><span></span><span></span>
