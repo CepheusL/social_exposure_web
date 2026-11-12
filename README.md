@@ -15,11 +15,16 @@ from earnings conference calls. The live site is served by GitHub Pages at
   pushed is what is served.
 - GitHub Pages serves the `main` branch root. **Every push to `main` redeploys
   the live site automatically.**
+- The root `index.html` is a neutral hub ("Firm-level Sustainability Exposure")
+  listing every hosted project. Each project's landing page is registered in the
+  `SECTIONS` array in `js/app.js` (`landing` field: social → `overview.html`,
+  climate → `climate/index.html`). New projects get a subdirectory plus an entry
+  there.
 - `CNAME` at the repo root points Pages at `sustainexposure.com`. Do not delete
   or move it.
 - Header and footer are injected at runtime by `js/app.js`. Which paper's chrome
   and citation load depends on `<body data-section="...">` (`social` by default,
-  `climate` under `/climate/`).
+  `climate` under `/climate/`, `home` on the hub).
 - Charts use the vendored `lib/chart.umd.min.js` (Chart.js UMD). No CDN, no npm.
 - CSS/JS changes are cache-busted with a `?v=N` query on `<link>`/`<script>` tags
   (currently `v=17`). **When you edit `css/style.css` or shared JS, bump the
@@ -28,11 +33,14 @@ from earnings conference calls. The live site is served by GitHub Pages at
 ## Repository layout
 
 ```
-index.html, explore.html, firm.html, ...   Pages for the Social Exposure paper
+index.html                                 Hub landing page for all hosted projects
+overview.html, explore.html, firm.html, ...  Pages for the Social Exposure paper
+                                             (overview.html is the sub-site landing)
 climate/                                   Mirror page set for the Climate paper
                                              (links use ../ relative paths)
 css/style.css                              Single shared stylesheet
-js/app.js                                  Site chrome (header/footer), config per paper
+js/app.js                                  Site chrome (header/footer), config per paper, hub nav
+js/hub.js                                  Fills the hub project cards from each meta.json
 js/charts.js                               Shared chart helpers
 js/<page>.js                               Page logic, Social Exposure sub-site
 js/climate/<page>.js                       Page logic, Climate sub-site

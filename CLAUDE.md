@@ -1,7 +1,8 @@
 # CLAUDE.md — project rules for AI assistants
 
-Static marketing/data-explorer site for two papers (Unpacking Social Exposure at
-the root; Firm-Level Climate Change Exposure under `/climate/`), served live by
+Static marketing/data-explorer site for two papers (Unpacking Social Exposure
+with pages at the repo root; Firm-Level Climate Change Exposure under
+`/climate/`), behind a neutral project hub at `index.html`, served live by
 GitHub Pages from `main` at https://sustainexposure.com/. See `README.md` for
 the full structure and workflow.
 
@@ -30,7 +31,11 @@ the full structure and workflow.
   any page's `<link>`/`<script>` tags). Bump the number in **all pages of both
   sub-sites** whenever `css/style.css` or shared JS changes.
 - **Site chrome:** header/footer are injected by `js/app.js`; per-paper config
-  (nav, citations) is selected via `<body data-section="...">`.
+  (nav, citations) is selected via `<body data-section="...">` (`social`,
+  `climate`, or `home` for the hub, which has no page nav). The hub at
+  `index.html` lists all projects; each project's landing page is set by the
+  `landing` field in the `SECTIONS` array in `js/app.js`. Add new projects as a
+  subdirectory plus a `SECTIONS` entry.
 - **Copy style:** short sentences, plain wording, no em dashes.
 - **Accessibility:** preserve the existing skip link, `aria-*` attributes and
   `sr-only` labels when editing pages.

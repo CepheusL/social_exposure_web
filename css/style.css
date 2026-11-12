@@ -777,3 +777,44 @@ tbody tr:hover td, tbody tr:hover th { background: #fcfbf8; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* ============ HUB (project landing page) ============ */
+[data-section="home"] { --nav-height: 56px; }
+.nav-sub-home { display: none; }
+
+.hub-hero { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 64px 40px 56px; }
+.hub-hero .hero-desc { margin-left: auto; margin-right: auto; }
+.hub-hero .hero-actions { justify-content: center; }
+
+.projects-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.project-card {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border-light); border-top: 3px solid var(--orange);
+  border-radius: var(--radius-lg); padding: 26px 26px 22px;
+  box-shadow: var(--shadow-sm); color: var(--ink);
+  transition: box-shadow var(--t), transform var(--t), border-color var(--t);
+}
+.project-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.project-card.proj-climate {
+  --orange: #2b9a6e; --orange-ink: #1d6b4c; --orange-dim: #e2f2e9;
+  --accent-border: #b9dfca; --focus-glow: rgba(43,154,110,0.18);
+}
+.project-head { display: flex; align-items: center; gap: 12px; }
+.project-head img { width: 40px; height: 40px; flex: none; }
+.project-head h3 { margin: 0; font-size: 1.05rem; }
+.project-authors { color: var(--muted); font-size: .84rem; }
+.project-desc { color: var(--ink-2); font-size: .93rem; }
+.project-stats {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+  margin: 8px 0 4px; padding: 14px 0; list-style: none;
+  border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light);
+}
+.project-stats strong { display: block; font-family: var(--font-heading); font-size: 1rem; color: var(--ink); overflow-wrap: anywhere; }
+.project-stats span { display: block; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+.project-link { font-family: var(--font-heading); font-weight: 600; font-size: .86rem; color: var(--orange-ink); margin-top: auto; }
+.project-link::after { content: " →"; }
+
+@media (max-width: 960px) {
+  .projects-grid { grid-template-columns: 1fr; }
+  .project-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

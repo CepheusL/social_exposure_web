@@ -1,14 +1,19 @@
 /* ============ app.js — shared core: constants, site chrome, data access, UI helpers ============ */
 
 const App = (() => {
-  /* ---------- Sections: each page declares <body data-section="social|climate"> ---------- */
-  const SECTION = document.body && document.body.dataset.section === "climate" ? "climate" : "social";
-  const IS_CLIMATE = SECTION === "climate";
-  const ROOT = IS_CLIMATE ? "../" : "";   // climate pages live in climate/
-  const SECTIONS = [
-    { key: "social", label: "Social Exposure", dir: "" },
-    { key: "climate", label: "Climate Change Exposure", dir: "climate/" },
-  ];
+/* ---------- Sections: each page declares <body data-section="social|climate|home"> ---------- */
+const SECTION = (() => {
+  const s = document.body && document.body.dataset.section;
+  return s === "climate" ? "climate" : s === "home" ? "home" : "social";
+})();
+const IS_CLIMATE = SECTION === "climate";
+const IS_HOME = SECTION === "home";
+const ROOT = IS_CLIMATE ? "../" : "";   // climate pages live in climate/
+const HOME_NAME = "Firm-level Sustainability Exposure";
+const SECTIONS = [
+  { key: "social", label: "Social Exposure", dir: "", landing: "overview.html" },
+  { key: "climate", label: "Climate Change Exposure", dir: "climate/", landing: "index.html" },
+];
 
   /* ---------- Site constants (single source of truth) ---------- */
   const SOCIAL_SITE = {
@@ -66,8 +71,8 @@ const App = (() => {
   };
   const SITE = IS_CLIMATE ? CLIMATE_SITE : SOCIAL_SITE;
 
-  const NAV = [
-    ["index.html", "Overview"], ["explore.html", "Explore"], ["compare.html", "Compare"],
+const NAV = [
+  [IS_CLIMATE ? "index.html" : "overview.html", "Overview"], ["explore.html", "Explore"], ["compare.html", "Compare"],
     ["firm.html", "Firms"], ["ranking.html", "Ranking"], ["patterns.html", "Patterns"], ["methods.html", "Methods"], ["data.html", "Data"],
   ];
 
@@ -244,32 +249,43 @@ const App = (() => {
   /* ---------- Site chrome (header + footer injected on every page) ---------- */
   function renderChrome() {
     const page = window.location.pathname.split("/").pop() || "index.html";
-    const current = SECTIONS.find((s) => s.key === SECTION);
-    const sectionLinks = SECTIONS.map((s) => `<a href="${ROOT}${s.dir}index.html"${s.key === SECTION
+    const current = SECTIONS.find((s) => s.key === SECTION) || { key: "home", label: HOME_NAME, dir: "", landing: "index.html" };
+    const sectionLinks = SECTIONS.map((s) => `<a href="${ROOT}${s.dir}${s.landing}"${s.key === SECTION
       ? ' class="active" aria-current="true"' : ""}>${s.label}</a>`).join("");
+    const brandHref = IS_HOME ? "index.html" : `${ROOT}${current.landing}`;
     const header = document.getElementById("site-header");
     if (header) {
       header.outerHTML = `
         <header class="navbar">
           <div class="nav-top">
-            <a class="brand" href="index.html" aria-label="${esc(current.label)} overview"><span class="brand-text">${esc(current.label)}</span></a>
+            <a class="brand" href="${brandHref}" aria-label="${esc(current.label)} overview"><span class="brand-text">${esc(current.label)}</span></a>
             <nav class="section-nav" aria-label="Datasets">${sectionLinks}</nav>
             <button class="hamburger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
               <span></span><span></span><span></span>
             </button>
           </div>
-          <div class="nav-sub" id="site-nav">
+          <div class="nav-sub${IS_HOME ? " nav-sub-home" : ""}" id="site-nav">
             <nav class="section-nav section-nav-mobile" aria-label="Datasets (menu)">${sectionLinks}</nav>
+            ${IS_HOME ? "" : `
             <nav class="page-nav" aria-label="${esc(current.label)} pages">
               ${NAV.map(([href, label]) =>
                 `<a href="${href}"${href === page ? ' class="active" aria-current="page"' : ""}>${label}</a>`).join("")}
-            </nav>
+            </nav>`}
           </div>
         </header>`;
     }
     const footer = document.getElementById("site-footer");
     if (footer) {
-      footer.outerHTML = `
+      footer.outerHTML = IS_HOME ? `
+        <footer class="site-footer">
+          <div class="footer-inner">
+            <p class="footer-cite">Data explorers for firm-level sustainability exposure research. Built from earnings conference calls.</p>
+            <nav class="footer-links" aria-label="Footer">
+              <a href="overview.html">Social Exposure data</a>
+              <a href="climate/index.html">Climate Change Exposure data</a>
+            </nav>
+          </div>
+        </footer>` : `
         <footer class="site-footer">
           <div class="footer-inner">
             <p class="footer-cite">${SITE.footerCite}</p>
